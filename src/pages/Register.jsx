@@ -36,13 +36,9 @@ export default function Register() {
       // If Supabase returns a session immediately (rare), exchange it for backend token
       const supabaseToken = data?.session?.access_token;
       if (supabaseToken) {
-        const resp = await fetch('/api/auth/supabase-exchange', {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${supabaseToken}`, 'Content-Type': 'application/json' },
-        });
-        if (resp.ok) {
-          const body = await resp.json();
-          if (body?.access_token) base44.auth.setToken(body.access_token);
+        const result = await base44.auth.exchangeSupabaseToken(supabaseToken);
+        if (result?.access_token) {
+          base44.auth.setToken(result.access_token);
           window.location.href = '/';
           return;
         }

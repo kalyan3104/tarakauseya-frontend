@@ -1,4 +1,5 @@
-const API_BASE = '/api';
+const configuredApiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
+const API_BASE = configuredApiUrl ? `${configuredApiUrl}/api` : '/api';
 
 const TOKEN_KEY = 'tara_kauseya_access_token';
 const jsonHeaders = {
@@ -93,6 +94,10 @@ const auth = {
   me: async () => request('/auth/me'),
   register: async (payload) => request('/auth/register', { method: 'POST', body: payload }),
   verifyOtp: async (payload) => request('/auth/verify-otp', { method: 'POST', body: payload }),
+  exchangeSupabaseToken: async (supabaseToken) => request('/auth/supabase-exchange', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${supabaseToken}` },
+  }),
   resendOtp: async (email) => request('/auth/resend-otp', { method: 'POST', body: { email } }),
   loginViaEmailPassword: async (email, password) => {
     const result = await request('/auth/login', { method: 'POST', body: { email, password } });
