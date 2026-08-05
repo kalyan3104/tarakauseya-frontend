@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 import { base44 } from '@/api/base44Client';
 
 const AuthContext = createContext();
+const AUTH_CHECK_TIMEOUT_MS = 10_000;
 export const ALLOWED_ADMIN_EMAILS = ['kalyannchowdary@gmail.com'];
 export const ALLOWED_ADMIN_PASSWORD = 'Kalyan@8899';
 
@@ -25,9 +26,25 @@ export const AuthProvider = ({ children }) => {
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const checkUserAuth = useCallback(async () => {
     setIsLoadingAuth(true);
-    try { setUser(await base44.auth.me()); return true; }
+    let timeoutId;
+    try {
+      const currentUser = await Promise.race([
+        base44.auth.me(),
+        new Promise((_, reject) => {
+          timeoutId = window.setTimeout(
+            () => reject(new Error('Authentication check timed out')),
+            AUTH_CHECK_TIMEOUT_MS,
+          );
+        }),
+      ]);
+      setUser(currentUser);
+      return true;
+    }
     catch { setUser(null); return false; }
-    finally { setIsLoadingAuth(false); }
+    finally {
+      window.clearTimeout(timeoutId);
+      setIsLoadingAuth(false);
+    }
   }, []);
   useEffect(() => { checkUserAuth(); }, [checkUserAuth]);
   const logout = async (shouldRedirect = true) => {
