@@ -1,6 +1,8 @@
 const configuredApiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
 const API_BASE = configuredApiUrl ? `${configuredApiUrl}/api` : '/api';
 
+import { supabase } from '@/lib/supabaseClient';
+
 const TOKEN_KEY = 'tara_kauseya_access_token';
 const jsonHeaders = {
   'Content-Type': 'application/json',
@@ -17,7 +19,9 @@ async function request(path, options = /** @type {any} */ ({})) {
   };
 
   const token = localStorage.getItem(TOKEN_KEY);
-  if (token) fetchOptions.headers.Authorization = `Bearer ${token}`;
+  if (token && !fetchOptions.headers.Authorization) {
+    fetchOptions.headers.Authorization = `Bearer ${token}`;
+  }
 
   if (body !== undefined) {
     if (body instanceof FormData) {
@@ -90,22 +94,75 @@ const integrations = {
   },
 };
 
+const normalizePhone = (value) => {
+  if (typeof value !== 'string') return '';
+  const digits = value.replace(/\D/g, '');
+  if (/^[6-9]\d{9}$/.test(digits)) return `+91${digits}`;
+  return '';
+};
+
 const auth = {
   me: async () => request('/auth/me'),
-  register: async (payload) => request('/auth/register', { method: 'POST', body: payload }),
-  verifyOtp: async (payload) => request('/auth/verify-otp', { method: 'POST', body: payload }),
+  requestPhoneOtp: async (phone) => {
+    const normalizedPhone = normalizePhone(phone);
+    if (!/^\+91[6-9]\d{9}$/.test(normalizedPhone)) {
+      throw new Error('Enter a valid 10-digit Indian phone number');
+    }
+    const { error } = await supabase.auth.signInWithOtp({
+      phone: normalizedPhone,
+      options: { shouldCreateUser: true },
+    });
+    if (error) throw error;
+    return { ok: true, phone: normalizedPhone };
+  },
+  verifyPhoneOtp: async ({ phone, otpCode }) => {
+    const normalizedPhone = normalizePhone(phone);
+    if (!/^\+91[6-9]\d{9}$/.test(normalizedPhone)) {
+      throw new Error('Enter a valid 10-digit Indian phone number');
+    }
+    const { data, error } = await supabase.auth.verifyOtp({
+      phone: normalizedPhone,
+      token: otpCode,
+      type: 'sms',
+    });
+    if (error) throw error;
+    const accessToken = data?.session?.access_token;
+    if (!accessToken) throw new Error('OTP verification failed');
+    const result = await request('/auth/supabase-exchange', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (result?.access_token) {
+      localStorage.setItem(TOKEN_KEY, result.access_token);
+    }
+    return result;
+  },
+  signInWithGoogle: async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/login`,
+      },
+    });
+    if (error) throw error;
+    return { ok: true };
+  },
+  resendPhoneOtp: async (phone) => {
+    const normalizedPhone = normalizePhone(phone);
+    if (!/^\+91[6-9]\d{9}$/.test(normalizedPhone)) {
+      throw new Error('Enter a valid 10-digit Indian phone number');
+    }
+    const { error } = await supabase.auth.signInWithOtp({
+      phone: normalizedPhone,
+      options: { shouldCreateUser: true },
+    });
+    if (error) throw error;
+    return { ok: true, phone: normalizedPhone };
+  },
   exchangeSupabaseToken: async (supabaseToken) => request('/auth/supabase-exchange', {
     method: 'POST',
     headers: { Authorization: `Bearer ${supabaseToken}` },
   }),
-  resendOtp: async (email) => request('/auth/resend-otp', { method: 'POST', body: { email } }),
-  loginViaEmailPassword: async (email, password) => {
-    const result = await request('/auth/login', { method: 'POST', body: { email, password } });
-    if (result?.access_token) localStorage.setItem(TOKEN_KEY, result.access_token);
-    return result;
-  },
-  resetPasswordRequest: async (email) => request('/auth/reset-password-request', { method: 'POST', body: { email } }),
-  resetPassword: async ({ resetToken, newPassword }) => request('/auth/reset-password', { method: 'POST', body: { resetToken, newPassword } }),
   setToken: (token) => localStorage.setItem(TOKEN_KEY, token),
   logout: async () => {
     try { await request('/auth/logout', { method: 'POST' }); } finally { localStorage.removeItem(TOKEN_KEY); }
@@ -113,7 +170,6 @@ const auth = {
   redirectToLogin: () => {
     window.location.href = '/login';
   },
-  loginWithProvider: (..._args) => { throw new Error('Google sign-in is not configured yet. Please use email and password.'); },
 };
 
 export const base44 = {

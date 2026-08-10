@@ -26,8 +26,6 @@ import AdminAnalytics from '@/pages/admin/AdminAnalytics';
 import AdminImport from '@/pages/admin/AdminImport';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
-import ForgotPassword from '@/pages/ForgotPassword';
-import ResetPassword from '@/pages/ResetPassword';
 import Cart from '@/pages/Cart';
 import Checkout from '@/pages/Checkout';
 import AdminTrialRequests from '@/pages/admin/AdminTrialRequests';
@@ -57,8 +55,6 @@ return (
   <Routes>
     <Route path="/login" element={<Login />} />
     <Route path="/register" element={<Register />} />
-    <Route path="/forgot-password" element={<ForgotPassword />} />
-    <Route path="/reset-password" element={<ResetPassword />} />
     <Route element={<SiteLayout />}>
       <Route path="/" element={<Home />} />
       <Route path="/collections" element={<Collections />} />

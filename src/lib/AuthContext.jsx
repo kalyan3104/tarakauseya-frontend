@@ -3,29 +3,21 @@ import { base44 } from '@/api/base44Client';
 
 const AuthContext = createContext();
 const AUTH_CHECK_TIMEOUT_MS = 10_000;
-export const ALLOWED_ADMIN_EMAILS = ['kalyannchowdary@gmail.com'];
-export const ALLOWED_ADMIN_PASSWORD = 'Kalyan@8899';
-
-export const normalizeEmail = (value) => {
-  if (typeof value !== 'string') return '';
-  return value.trim().toLowerCase();
-};
 
 export const isAdminUser = (currentUser) => {
   if (!currentUser) return false;
 
   const role = (currentUser.role || currentUser.user?.role || "").toString().trim().toLowerCase();
-  if (role === "admin") return true;
-
-  const email = normalizeEmail(currentUser.email || currentUser.user?.email || currentUser.username);
-  return ALLOWED_ADMIN_EMAILS.includes(email);
+  return role === "admin";
 };
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const checkUserAuth = useCallback(async () => {
     setIsLoadingAuth(true);
+    setAuthChecked(false);
     let timeoutId;
     try {
       const currentUser = await Promise.race([
@@ -39,14 +31,25 @@ export const AuthProvider = ({ children }) => {
       ]);
       setUser(currentUser);
       return true;
-    }
-    catch { setUser(null); return false; }
-    finally {
+    } catch {
+      setUser(null);
+      return false;
+    } finally {
       window.clearTimeout(timeoutId);
       setIsLoadingAuth(false);
+      setAuthChecked(true);
     }
   }, []);
-  useEffect(() => { checkUserAuth(); }, [checkUserAuth]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('tara_kauseya_access_token');
+    if (!token) {
+      setAuthChecked(true);
+      return;
+    }
+    checkUserAuth();
+  }, [checkUserAuth]);
+
   const logout = async (shouldRedirect = true) => {
     await base44.auth.logout();
     setUser(null);
@@ -59,7 +62,7 @@ export const AuthProvider = ({ children }) => {
     isLoadingAuth,
     isLoadingPublicSettings: false,
     authError: null,
-    authChecked: !isLoadingAuth,
+    authChecked,
     appPublicSettings: null,
     logout,
     navigateToLogin: () => { window.location.href = '/login'; },

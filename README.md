@@ -1,77 +1,44 @@
-# Base44 Project
+# Varahi Kauseya
 
-Use this repository to run and edit the app locally, then publish changes back through Base44.
+## A Heritage Fashion Brand
 
-Any change pushed to the repo will also be reflected in the Base44 Builder.
+**Varahi Kauseya** celebrates the timeless elegance of Indian craftsmanship, blending heritage-inspired artistry with modern fashion sensibilities. This frontend project brings the brand's curated collections to life with a graceful digital storefront built for immersive shopping experiences.
 
-## Prerequisites
+### Brand Story
 
-1. Clone the repository using the project's Git URL.
-2. Navigate to the project directory.
-3. Install dependencies: `npm install`.
-4. Install the Base44 CLI: `npm install -g base44@latest`.
+- Rooted in tradition, Varahi Kauseya honors artisanal techniques and richly woven textiles.
+- Each design captures graceful silhouettes, handpicked motifs, and a legacy of cultural finesse.
+- Our collections invite customers to embrace classic beauty with contemporary styling.
 
-See the [Base44 CLI docs](https://docs.base44.com/developers/references/cli/get-started/overview) if you want to run Base44 commands directly.
+### What This Frontend Includes
 
-## Run Locally
+- A visually compelling homepage that highlights featured sarees, curated collections, and lifestyle imagery.
+- Product listing and detail pages to explore fabrics, craftsmanship, and styling details.
+- Authentication flows for login, registration, checkout, and account management.
+- Responsive design optimized for both desktop and mobile shopping.
 
-Run the full local development environment from the project root:
+### Project Setup
 
-```bash
-base44 dev
-```
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-`base44 dev` starts the local Base44 development backend and, when this app is configured for it, also starts the frontend dev server for you. Use the frontend URL printed by the command.
+2. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
-For example, when the Base44 project config includes a `serveCommand`, `base44 dev` can launch the frontend too:
+3. Open the app in your browser at the local URL shown by Vite.
 
-```json5
-{
-  "site": {
-    "serveCommand": "npm run dev"
-  }
-}
-```
+### Tech Stack
 
-In a Base44 project this lives in `base44/config.jsonc`.
+- Vite
+- React
+- Tailwind CSS
+- Supabase (for auth and user data)
 
-## Run Only The Frontend
+### Notes
 
-If you only want to work on the frontend against the hosted Base44 backend, run:
+This frontend is part of the Varahi Kauseya experience, designed to showcase the brand's artisan heritage, luxurious textiles, and elegant modern fashion story.
 
-```bash
-npm run dev
-```
-
-Open the local URL printed by Vite.
-
-## Use The Hosted Backend
-
-For frontend-only development, create or update `.env.local` in the project root:
-
-```bash
-VITE_BASE44_APP_ID=your_app_id
-VITE_BASE44_APP_BASE_URL=https://your-app.base44.app
-```
-
-`VITE_BASE44_APP_ID` identifies the Base44 app.
-
-`VITE_BASE44_APP_BASE_URL` tells the Base44 Vite plugin where to send local `/api` requests. Point it at your deployed Base44 app URL when you want the local frontend to use the hosted backend.
-
-When you use `base44 dev`, the command injects the local Base44 values for you, so `.env.local` is mainly needed for frontend-only workflows.
-
-## Publish Your Changes
-
-After pushing your changes to git, open the Base44 dashboard and publish the app:
-
-```bash
-base44 dashboard open
-```
-
-## Docs & Support
-
-Documentation: [https://docs.base44.com/Integrations/Using-GitHub](https://docs.base44.com/Integrations/Using-GitHub)
-
-Base44 CLI command reference: [https://docs.base44.com/developers/references/cli/commands/introduction](https://docs.base44.com/developers/references/cli/commands/introduction)
-
-Support: [https://app.base44.com/support](https://app.base44.com/support)
