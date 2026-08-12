@@ -103,6 +103,20 @@ const normalizePhone = (value) => {
 
 const auth = {
   me: async () => request('/auth/me'),
+  registerWithEmail: async ({ email, password, name }) => {
+    const result = await request('/auth/register', { method: 'POST', body: { email, password, name } });
+    if (result?.access_token) {
+      localStorage.setItem(TOKEN_KEY, result.access_token);
+    }
+    return result;
+  },
+  signInWithEmail: async ({ email, password }) => {
+    const result = await request('/auth/login', { method: 'POST', body: { email, password } });
+    if (result?.access_token) {
+      localStorage.setItem(TOKEN_KEY, result.access_token);
+    }
+    return result;
+  },
   requestPhoneOtp: async (phone) => {
     const normalizedPhone = normalizePhone(phone);
     if (!/^\+91[6-9]\d{9}$/.test(normalizedPhone)) {

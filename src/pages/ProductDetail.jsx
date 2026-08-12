@@ -86,7 +86,7 @@ export default function ProductDetail() {
           <div>
             <div className="aspect-[3/4] bg-muted overflow-hidden">
               {images[activeImg] && (
-                <Image src={images[activeImg]} alt={product.name} className="w-full h-full" fittingType="fill" />
+                <Image src={images[activeImg]} alt={product.name} className="w-full h-full" fittingType="fit" />
               )}
             </div>
             {images.length > 1 && (
@@ -97,7 +97,7 @@ export default function ProductDetail() {
                     onClick={() => setActiveImg(i)}
                     className={cn("aspect-[3/4] bg-muted overflow-hidden border", i === activeImg ? "border-foreground" : "border-transparent opacity-60 hover:opacity-100")}
                   >
-                    <Image src={img} alt={`${product.name} ${i + 1}`} className="w-full h-full" fittingType="fill" />
+                    <Image src={img} alt={`${product.name} ${i + 1}`} className="w-full h-full" fittingType="fit" />
                   </button>
                 ))}
               </div>
