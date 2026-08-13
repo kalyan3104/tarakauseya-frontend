@@ -50,6 +50,7 @@ export default function ProductForm({ product, onClose }) {
   }));
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const isEdit = !!product;
 
   const set = (key, val) => setForm((f) => ({ ...f, [key]: val }));
@@ -61,6 +62,7 @@ export default function ProductForm({ product, onClose }) {
 
   const handleUpload = async (files) => {
     if (!files.length) return;
+    setUploadError("");
     setUploading(true);
     try {
       const urls = [];
@@ -71,6 +73,8 @@ export default function ProductForm({ product, onClose }) {
       const next = [...(form.images || []), ...urls];
       set("images", next);
       if (!form.cover_image) set("cover_image", urls[0]);
+    } catch (error) {
+      setUploadError(error.message || "Upload failed");
     } finally {
       setUploading(false);
     }
@@ -139,6 +143,7 @@ export default function ProductForm({ product, onClose }) {
                 <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleUpload(Array.from(e.target.files))} />
               </label>
             </div>
+            {uploadError && <p className="mt-2 text-sm text-destructive">{uploadError}</p>}
           </div>
 
           {/* Fields */}

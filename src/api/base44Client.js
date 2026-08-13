@@ -20,6 +20,7 @@ function resolveUploadUrls(value) {
 import { supabase } from '@/lib/supabaseClient';
 
 const TOKEN_KEY = 'tara_kauseya_access_token';
+const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
 const jsonHeaders = {
   'Content-Type': 'application/json',
 };
@@ -96,6 +97,9 @@ const integrations = {
   Core: {
     UploadFile: async ({ file }) => {
       if (!file) throw new Error('No file provided');
+      if (file.size > MAX_UPLOAD_BYTES) {
+        throw new Error('Files must be 20 MB or smaller');
+      }
       const formData = new FormData();
       formData.append('file', file);
       const response = await fetch(`${API_BASE}/integrations/core/upload-file`, {
@@ -103,7 +107,14 @@ const integrations = {
         body: formData,
       });
       if (!response.ok) {
-        throw new Error('Upload failed');
+        const errorText = await response.text();
+        try {
+          const body = JSON.parse(errorText);
+          throw new Error(body.error || body.message || 'Upload failed');
+        } catch (error) {
+          if (error instanceof SyntaxError) throw new Error(errorText || 'Upload failed');
+          throw error;
+        }
       }
       return resolveUploadUrls(await response.json());
     },

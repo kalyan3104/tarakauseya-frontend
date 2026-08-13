@@ -10,6 +10,7 @@ export default function AdminMedia() {
   const qc = useQueryClient();
   const [folder, setFolder] = useState("general");
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
 
   const { data: items } = useQuery({
     queryKey: ["admin-media", folder],
@@ -17,6 +18,8 @@ export default function AdminMedia() {
   });
 
   const handleUpload = async (files) => {
+    if (!files.length) return;
+    setUploadError("");
     setUploading(true);
     try {
       const records = [];
@@ -26,6 +29,8 @@ export default function AdminMedia() {
       }
       await base44.entities.MediaAsset.bulkCreate(records);
       qc.invalidateQueries({ queryKey: ["admin-media"] });
+    } catch (error) {
+      setUploadError(error.message || "Upload failed");
     } finally { setUploading(false); }
   };
 
@@ -65,6 +70,7 @@ export default function AdminMedia() {
             Upload to {folder}
             <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleUpload(Array.from(e.target.files))} />
           </label>
+          {uploadError && <p className="mb-6 text-sm text-destructive">{uploadError}</p>}
 
           {list.length === 0 ? (
             <p className="py-16 text-center text-muted-foreground">No media in this folder.</p>
