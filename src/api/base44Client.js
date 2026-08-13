@@ -1,6 +1,22 @@
 const configuredApiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
 const API_BASE = configuredApiUrl ? `${configuredApiUrl}/api` : '/api';
 
+// Uploads are stored by the Rust API. In development, a relative path is served
+// by Vite's proxy; in production it must point at the API host, not GitHub Pages.
+export function resolveUploadUrl(url) {
+  if (typeof url !== 'string' || !url.startsWith('/uploads/')) return url;
+  return configuredApiUrl ? `${configuredApiUrl}${url}` : url;
+}
+
+function resolveUploadUrls(value) {
+  if (typeof value === 'string') return resolveUploadUrl(value);
+  if (Array.isArray(value)) return value.map(resolveUploadUrls);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, resolveUploadUrls(item)]));
+  }
+  return value;
+}
+
 import { supabase } from '@/lib/supabaseClient';
 
 const TOKEN_KEY = 'tara_kauseya_access_token';
@@ -48,7 +64,7 @@ async function request(path, options = /** @type {any} */ ({})) {
 
   const contentType = response.headers.get('content-type') || '';
   if (contentType.includes('application/json')) {
-    return response.json();
+    return resolveUploadUrls(await response.json());
   }
   return response.text();
 }
@@ -89,7 +105,7 @@ const integrations = {
       if (!response.ok) {
         throw new Error('Upload failed');
       }
-      return response.json();
+      return resolveUploadUrls(await response.json());
     },
   },
 };
