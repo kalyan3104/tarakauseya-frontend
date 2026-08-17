@@ -154,7 +154,7 @@ export default function ProductDetail() {
                   Enquire on Instagram
                 </a>
                 <a
-                  href={`mailto:atelier@varahikauseya.com?subject=${enquirySubject}`}
+                  href={`mailto:kalyan@varahikauseya.studio?subject=${enquirySubject}`}
                   className="flex-1 text-center text-[11px] uppercase tracking-luxe-sm border border-foreground px-7 py-4 hover:bg-foreground hover:text-background transition-colors duration-300"
                 >
                   Email Atelier

@@ -11,12 +11,12 @@ export default function Contact() {
     e.preventDefault();
     const subject = encodeURIComponent(form.subject || `Enquiry from ${form.name}`);
     const body = encodeURIComponent(`${form.message}\n\n— ${form.name} (${form.email})`);
-    window.location.href = `mailto:atelier@varahikauseya.com?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:kalyan@varahikauseya.studio?subject=${subject}&body=${body}`;
     setSent(true);
   };
 
   const channels = [
-    { icon: Mail, label: "Email", value: "atelier@varahikauseya.com", href: "mailto:atelier@varahikauseya.com" },
+    { icon: Mail, label: "Email", value: "kalyan@varahikauseya.studio", href: "mailto:kalyan@varahikauseya.studio" },
     { icon: Phone, label: "WhatsApp", value: "+91 8520 824 339", href: "https://wa.me/918520824339" },
     { icon: Instagram, label: "Instagram", value: "@varahikauseya", href: "https://instagram.com" },
     { icon: MapPin, label: "Atelier", value: "No. 12, Heritage Lane, Banaras", href: "https://maps.google.com" },

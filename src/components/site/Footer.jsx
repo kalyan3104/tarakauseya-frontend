@@ -16,7 +16,7 @@ export default function Footer() {
               <a href="https://instagram.com" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Instagram">
                 <Instagram className="w-[18px] h-[18px]" />
               </a>
-              <a href="mailto:atelier@varahikauseya.com" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Email">
+              <a href="mailto:kalyan@varahikauseya.studio" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Email">
                 <Mail className="w-[18px] h-[18px]" />
               </a>
               <a href="tel:+910000000000" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Phone">
