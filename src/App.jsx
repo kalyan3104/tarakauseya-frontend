@@ -67,7 +67,7 @@ return (
       <Route path="/cart" element={<Cart />} />
       <Route path="/checkout" element={<Checkout />} />
     </Route>
-    <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
+    <Route element={<ProtectedRoute requireAdmin={false} unauthenticatedElement={<Navigate to="/login" replace />} />}>
       <Route element={<SiteLayout />}>
         <Route path="/account/orders" element={<MyOrders />} />
       </Route>
