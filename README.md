@@ -38,7 +38,7 @@
 - Tailwind CSS
 - Supabase (for auth and user data)
 
-### Notes
+### Notess
 
 This frontend is part of the Varahi Kauseya experience, designed to showcase the brand's artisan heritage, luxurious textiles, and elegant modern fashion story.
 
