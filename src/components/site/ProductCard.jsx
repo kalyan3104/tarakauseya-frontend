@@ -15,7 +15,13 @@ export default function ProductCard({ product, index = 0 }) {
           alt={product.name}
           className="w-full h-full"
           fittingType="fill"
+          loading={index < 4 ? "eager" : "lazy"}
         />
+        {product.out_of_stock && (
+          <span className="absolute top-4 right-4 text-[10px] uppercase tracking-luxe-sm bg-background/95 text-red-700 px-3 py-1.5">
+            Out of stock
+          </span>
+        )}
         {product.new_arrival && (
           <span className="absolute top-4 left-4 text-[10px] uppercase tracking-luxe-sm bg-background/90 px-3 py-1.5">
             New Arrival
@@ -23,7 +29,7 @@ export default function ProductCard({ product, index = 0 }) {
         )}
         <div className="absolute inset-x-0 bottom-0 p-4 translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
           <span className="inline-block text-[11px] uppercase tracking-luxe-sm bg-background px-4 py-2.5">
-            View Piece
+            {product.out_of_stock ? "View details" : "View Piece"}
           </span>
         </div>
       </div>

@@ -29,6 +29,7 @@ import Register from '@/pages/Register';
 import Cart from '@/pages/Cart';
 import Checkout from '@/pages/Checkout';
 import AdminTrialRequests from '@/pages/admin/AdminTrialRequests';
+import MyOrders from '@/pages/MyOrders';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -65,6 +66,11 @@ return (
       <Route path="/journal" element={<Journal />} />
       <Route path="/cart" element={<Cart />} />
       <Route path="/checkout" element={<Checkout />} />
+    </Route>
+    <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
+      <Route element={<SiteLayout />}>
+        <Route path="/account/orders" element={<MyOrders />} />
+      </Route>
     </Route>
     <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
       <Route path="/admin" element={<AdminLayout />}>

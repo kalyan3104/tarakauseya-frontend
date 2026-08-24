@@ -33,6 +33,7 @@ const TOGGLES = [
   { key: "trending", label: "Trending" },
   { key: "new_arrival", label: "New Arrival" },
   { key: "active", label: "Active" },
+  { key: "out_of_stock", label: "Out of Stock" },
 ];
 
 const TEXTAREA = ["description"];
@@ -45,6 +46,7 @@ export default function ProductForm({ product, onClose }) {
     fabric: "", colour: "", border: "", pattern: "", occasion: "", length: "",
     blouse_included: false, weight: "", featured: false, trending: false,
     new_arrival: true, active: true, seo_title: "", seo_description: "",
+    out_of_stock: false,
     images: [], cover_image: "",
     ...product,
   }));
@@ -94,12 +96,27 @@ export default function ProductForm({ product, onClose }) {
       if (payload.price) payload.price = Number(payload.price);
       if (payload.discount_price) payload.discount_price = Number(payload.discount_price);
       if (payload.weight) payload.weight = Number(payload.weight);
+      let savedProduct;
       if (isEdit) {
-        await base44.entities.Product.update(product.id, payload);
+        savedProduct = await base44.entities.Product.update(product.id, payload);
       } else {
-        await base44.entities.Product.create(payload);
+        savedProduct = await base44.entities.Product.create(payload);
+      }
+
+      const inventory = await base44.entities.Inventory.filter({ product_id: savedProduct.id });
+      if (!inventory.length) {
+        await base44.entities.Inventory.create({
+          product_id: savedProduct.id,
+          sku: savedProduct.sku || payload.sku,
+          stock_quantity: 0,
+          reserved: 0,
+          incoming: 0,
+          minimum_stock: 0,
+          warehouse_location: "",
+        });
       }
       qc.invalidateQueries({ queryKey: ["admin-products"] });
+      qc.invalidateQueries({ queryKey: ["admin-inventory"] });
       qc.invalidateQueries({ queryKey: ["sarees"] });
       qc.invalidateQueries({ queryKey: ["featured-sarees"] });
       onClose();

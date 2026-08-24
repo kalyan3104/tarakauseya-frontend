@@ -20,7 +20,7 @@ const OCCASIONS = ["Bridal", "Wedding", "Festive", "Everyday"];
 
 export default function Sarees() {
   const [params, setParams] = useSearchParams();
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => params.get("q") || "");
   const [sort, setSort] = useState("-created_date");
   const [showFilters, setShowFilters] = useState(false);
 
@@ -44,12 +44,11 @@ export default function Sarees() {
   const products = useMemo(() => {
     let list = data || [];
     if (search.trim()) {
-      const s = search.toLowerCase();
+      const s = search.trim().toLowerCase();
       list = list.filter(
         (p) =>
-          p.name?.toLowerCase().includes(s) ||
-          p.fabric?.toLowerCase().includes(s) ||
-          p.colour?.toLowerCase().includes(s)
+          [p.name, p.fabric, p.colour, p.sku, p.border, p.pattern, p.occasion, p.collection]
+            .some((field) => field?.toLowerCase().includes(s))
       );
     }
     return list;
@@ -62,7 +61,18 @@ export default function Sarees() {
     setParams(next, { replace: true });
   };
 
-  const clearAll = () => setParams({}, { replace: true });
+  const clearAll = () => {
+    setSearch("");
+    setParams({}, { replace: true });
+  };
+
+  const updateSearch = (value) => {
+    setSearch(value);
+    const next = new URLSearchParams(params);
+    if (value.trim()) next.set("q", value);
+    else next.delete("q");
+    setParams(next, { replace: true });
+  };
 
   const activeFilters = [collection, fabric, occasion].filter(Boolean).length;
 
@@ -78,14 +88,25 @@ export default function Sarees() {
         <div className="container-luxe">
           {/* Toolbar */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-border">
-            <div className="flex items-center gap-3 flex-1 max-w-md">
-              <Search className="w-4 h-4 text-muted-foreground shrink-0" />
+            <div className="flex items-center gap-3 flex-1 max-w-md border-b border-foreground/30 pb-2 focus-within:border-foreground transition-colors">
+              <Search className="w-4 h-4 text-foreground/60 shrink-0" />
               <input
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by name, fabric, colour…"
+                onChange={(e) => updateSearch(e.target.value)}
+                placeholder="Search by weave, colour or SKU"
+                aria-label="Search sarees by weave, colour or SKU"
                 className="w-full bg-transparent text-sm font-light placeholder:text-muted-foreground focus:outline-none"
               />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => updateSearch("")}
+                  className="text-muted-foreground hover:text-foreground"
+                  aria-label="Clear search"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
             <div className="flex items-center gap-3">
               <button

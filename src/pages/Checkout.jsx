@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useCart } from "@/lib/CartContext";
+import { useAuth } from "@/lib/AuthContext";
 import { formatINR } from "@/lib/format";
 import { Image } from "@/components/ui/image";
 import PageHeader from "@/components/site/PageHeader";
@@ -15,6 +16,7 @@ const inputCls =
 
 export default function Checkout() {
   const { items, clear } = useCart();
+  const { user, isAuthenticated } = useAuth();
   const [form, setForm] = useState({
     customer_name: "",
     phone: "",
@@ -78,10 +80,15 @@ export default function Checkout() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.customer_name || !form.phone || !form.address || !form.pincode) return;
+    if (!isAuthenticated || !user?.id) {
+      setError("Please sign in before placing an order so it can appear in My Orders.");
+      return;
+    }
     setSubmitting(true);
     setError("");
     try {
       const payload = {
+        customer_id: user.id,
         customer_name: form.customer_name,
         phone: form.phone,
         email: form.email,

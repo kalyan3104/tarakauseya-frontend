@@ -86,7 +86,7 @@ export default function ProductDetail() {
           <div>
             <div className="aspect-[3/4] bg-muted overflow-hidden">
               {images[activeImg] && (
-                <Image src={images[activeImg]} alt={product.name} className="w-full h-full" fittingType="fit" />
+                <Image src={images[activeImg]} alt={product.name} className="w-full h-full" fittingType="fit" loading="eager" />
               )}
             </div>
             {images.length > 1 && (
@@ -131,6 +131,7 @@ export default function ProductDetail() {
             </div>
 
             <div className="mt-8 flex flex-wrap gap-2">
+              {product.out_of_stock && <Tag>Out of Stock</Tag>}
               {product.trending && <Tag>Trending</Tag>}
               {product.new_arrival && <Tag>New Arrival</Tag>}
               {product.featured && <Tag>Featured</Tag>}
@@ -139,10 +140,11 @@ export default function ProductDetail() {
 
             <div className="mt-8 space-y-3">
               <button
+                disabled={product.out_of_stock}
                 onClick={() => { addItem(product); setAdded(true); setTimeout(() => setAdded(false), 2000); }}
-                className="w-full text-[11px] uppercase tracking-luxe-sm bg-foreground text-background px-7 py-4 hover:bg-accent transition-colors duration-300 flex items-center justify-center gap-2"
+                className="w-full text-[11px] uppercase tracking-luxe-sm bg-foreground text-background px-7 py-4 hover:bg-accent transition-colors duration-300 flex items-center justify-center gap-2 disabled:bg-secondary disabled:text-muted-foreground disabled:cursor-not-allowed"
               >
-                {added ? <><Check className="w-4 h-4" /> Added to cart</> : <><ShoppingBag className="w-4 h-4" /> Add to cart</>}
+                {product.out_of_stock ? "Out of stock" : added ? <><Check className="w-4 h-4" /> Added to cart</> : <><ShoppingBag className="w-4 h-4" /> Add to cart</>}
               </button>
               <div className="flex flex-col sm:flex-row gap-3">
                 <a

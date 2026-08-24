@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { formatINR } from "@/lib/format";
 import { Eye, X } from "lucide-react";
 
-const STATUSES = ["requested", "confirmed", "completed", "cancelled"];
+const STATUSES = ["requested", "confirmed", "shipped", "delivered", "completed", "cancelled"];
 
 export default function AdminTrialRequests() {
   const qc = useQueryClient();

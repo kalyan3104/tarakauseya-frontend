@@ -9,6 +9,7 @@ const FALLBACK_IMAGE_URL =
 // (resize, focal-point crop, and format conversion via the OUTPUT FILENAME
 // EXTENSION — a .webp output re-encodes JPG/PNG uploads to WebP on the fly).
 const WIX_MEDIA_HOSTS = ["media.base44.com", "static.wixstatic.com"]
+const SUPABASE_STORAGE_HOST = "supabase.co"
 // First-paint width before the container is measured.
 const DEFAULT_TRANSFORM_WIDTH = 1024
 const DEVICE_PIXEL_RATIOS = [1, 2, 3]
@@ -34,6 +35,30 @@ function parseWixMediaUrl(src) {
     return { baseUrl: `${url.origin}${basePath}`, filename }
   } catch {
     return null
+  }
+}
+
+function optimizeSupabaseImageUrl(src) {
+  try {
+    const url = new URL(src)
+    if (
+      !url.hostname.endsWith(SUPABASE_STORAGE_HOST) ||
+      !url.pathname.startsWith("/storage/v1/object/public/")
+    ) {
+      return src
+    }
+
+    url.pathname = url.pathname.replace(
+      "/storage/v1/object/public/",
+      "/storage/v1/render/image/public/"
+    )
+    url.searchParams.set("width", "900")
+    url.searchParams.set("quality", "75")
+    url.searchParams.set("resize", "contain")
+    url.searchParams.set("format", "webp")
+    return url.toString()
+  } catch {
+    return src
   }
 }
 
@@ -207,14 +232,15 @@ const Image = React.forwardRef(
 
     // The fallback renders as a plain <img> so a broken upload can't cascade
     // into a second (transformed) failing request.
-    const parsed = imgSrc === FALLBACK_IMAGE_URL ? null : parseWixMediaUrl(imgSrc)
+    const optimizedSrc = optimizeSupabaseImageUrl(imgSrc)
+    const parsed = imgSrc === FALLBACK_IMAGE_URL ? null : parseWixMediaUrl(optimizedSrc)
 
     if (!parsed) {
       const isErrorUrl = imgSrc === FALLBACK_IMAGE_URL
       return (
         <img
           ref={ref}
-          src={imgSrc}
+          src={optimizedSrc}
           {...imageProps}
           className={cn(
             imageProps.className,

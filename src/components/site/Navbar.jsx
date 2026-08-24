@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Menu, X, ShoppingBag } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Menu, X, Search, ShoppingBag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/lib/CartContext";
 import { useAuth } from "@/lib/AuthContext";
@@ -18,6 +18,8 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const [search, setSearch] = useState(() => new URLSearchParams(location.search).get("q") || "");
   const { count } = useCart();
   const { isAuthenticated, isAdmin } = useAuth();
 
@@ -29,6 +31,13 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => setOpen(false), [location.pathname]);
+
+  const submitSearch = (event) => {
+    event.preventDefault();
+    const query = search.trim();
+    navigate(query ? `/sarees?q=${encodeURIComponent(query)}` : "/sarees");
+    setOpen(false);
+  };
 
   return (
     <header
@@ -69,6 +78,16 @@ export default function Navbar() {
               {item.label}
             </Link>
           ))}
+          <form onSubmit={submitSearch} className="flex items-center gap-2 border-b border-foreground/40 px-1 py-1 focus-within:border-foreground transition-colors">
+            <Search className="w-3.5 h-3.5 text-foreground/60 shrink-0" />
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search sarees or SKU"
+              aria-label="Search sarees or SKU"
+              className="w-32 bg-transparent text-xs font-light placeholder:text-muted-foreground focus:outline-none"
+            />
+          </form>
           <Link
             to="/cart"
             className="relative editorial-link text-[12px] uppercase tracking-luxe-sm text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1.5"
@@ -104,6 +123,16 @@ export default function Navbar() {
                 {item.label}
               </Link>
             ))}
+            <form onSubmit={submitSearch} className="flex items-center gap-3 border-b border-border py-3">
+              <Search className="w-4 h-4 text-foreground/60" />
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search sarees, colours or SKU"
+                aria-label="Search sarees, colours or SKU"
+                className="w-full bg-transparent text-sm font-light placeholder:text-muted-foreground focus:outline-none"
+              />
+            </form>
             <Link
               to="/cart"
               className="text-sm uppercase tracking-luxe-sm text-foreground/80"

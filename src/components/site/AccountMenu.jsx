@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { User, LogOut, ChevronDown } from "lucide-react";
+import { User, LogOut, ChevronDown, Package } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { cn } from "@/lib/utils";
 
@@ -62,6 +62,13 @@ export default function AccountMenu({ isAdmin: propIsAdmin }) {
               <User className="w-3.5 h-3.5" /> Atelier Dashboard
             </Link>
           )}
+          <Link
+            to="/account/orders"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-3 px-4 py-3 text-xs hover:bg-secondary transition-colors"
+          >
+            <Package className="w-3.5 h-3.5" /> My Orders
+          </Link>
           <button
             onClick={() => logout("/")}
             className="w-full flex items-center gap-3 px-4 py-3 text-xs hover:bg-secondary transition-colors text-left"

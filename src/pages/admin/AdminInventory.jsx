@@ -26,18 +26,35 @@ export default function AdminInventory() {
   }, [products]);
 
   const list = useMemo(() => {
-    let l = inventory || [];
+    const inventoryByProduct = {};
+    (inventory || []).forEach((item) => { inventoryByProduct[item.product_id] = item; });
+    let l = (products || []).map((product) => inventoryByProduct[product.id] || {
+      id: `new-${product.id}`,
+      product_id: product.id,
+      sku: product.sku,
+      stock_quantity: 0,
+      reserved: 0,
+      incoming: 0,
+      minimum_stock: 0,
+      warehouse_location: "",
+      isPlaceholder: true,
+    });
     if (search.trim()) {
       const s = search.toLowerCase();
       l = l.filter((i) => i.sku?.toLowerCase().includes(s) || productMap[i.product_id]?.name?.toLowerCase().includes(s));
     }
     return l;
-  }, [inventory, search, productMap]);
+  }, [inventory, products, search, productMap]);
 
   const save = async (item) => {
     const patch = edits[item.id];
     if (!patch) return;
-    await base44.entities.Inventory.update(item.id, patch);
+    if (item.isPlaceholder) {
+      const { id, isPlaceholder, ...inventoryDefaults } = item;
+      await base44.entities.Inventory.create({ ...inventoryDefaults, ...patch });
+    } else {
+      await base44.entities.Inventory.update(item.id, patch);
+    }
     await base44.entities.InventoryLog.create({
       product_id: item.product_id,
       sku: item.sku,

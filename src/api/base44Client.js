@@ -225,6 +225,9 @@ export const base44 = {
   },
   integrations,
   auth,
+  account: {
+    orders: async () => request('/account/orders'),
+  },
   functions: {
     invoke: async (name, body) => ({ data: await request(`/functions/${encodeURIComponent(name)}`, { method: 'POST', body }) }),
   },
