@@ -33,7 +33,7 @@
 
 ### Tech Stack
 
-- Vite
+- Vite ,,
 - React
 - Tailwind CSS
 - Supabase (for auth and user data)
