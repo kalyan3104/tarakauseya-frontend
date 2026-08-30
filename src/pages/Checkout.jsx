@@ -347,7 +347,7 @@ export default function Checkout() {
             >
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Place Order <ArrowRight className="w-4 h-4" /></>}
             </button>}
-            {!isBengaluru && <p className="mt-6 text-xs text-muted-foreground">Enter a Bengaluru or Bangalore city address the “Place Order” button will become available. Orders are delivered within 2 days.</p>}
+            {!isBengaluru && <p className="mt-6 text-xs text-muted-foreground"> Enter a Bengaluru/Bangalore address or a valid Bangalore PIN code to make the “Place Order” button available. Orders are delivered within 2 days.</p>}
           </aside>
         </form>
       </div>
