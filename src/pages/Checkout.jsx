@@ -347,7 +347,7 @@ export default function Checkout() {
             >
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Place Order <ArrowRight className="w-4 h-4" /></>}
             </button>}
-            {!isBengaluru && <p className="mt-6 text-xs text-muted-foreground">Enter a Bengaluru or Bangalore city address to request a home trial. Customers elsewhere can place a paid order from the cart.</p>}
+            {!isBengaluru && <p className="mt-6 text-xs text-muted-foreground">Enter a Bengaluru or Bangalore city address to Two Days Deivery. Customers elsewhere can place an order from the cart.</p>}
           </aside>
         </form>
       </div>
