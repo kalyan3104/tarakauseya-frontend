@@ -102,13 +102,27 @@ export default function Navbar() {
           <AccountMenu isAdmin={isAdmin} />
         </div>
 
-        <button
-          className="md:hidden p-2 -mr-2"
-          onClick={() => setOpen((v) => !v)}
-          aria-label="Menu"
-        >
-          {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
+        <div className="md:hidden flex items-center gap-2">
+          <Link
+            to="/cart"
+            className="relative flex items-center justify-center h-10 w-10 rounded-full border border-foreground/30 hover:bg-foreground hover:text-background transition-colors"
+            aria-label="Cart"
+          >
+            <ShoppingBag className="w-4 h-4" />
+            {count > 0 && (
+              <span className="absolute -top-1 -right-1 bg-accent text-accent-foreground text-[9px] rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center">
+                {count}
+              </span>
+            )}
+          </Link>
+          <button
+            className="p-2 -mr-2"
+            onClick={() => setOpen((v) => !v)}
+            aria-label="Menu"
+          >
+            {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
       </div>
 
       {open && (

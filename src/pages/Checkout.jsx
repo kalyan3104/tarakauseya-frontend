@@ -53,7 +53,16 @@ export default function Checkout() {
   }, [areas, form.pincode]);
 
   const total = items.reduce((s, i) => s + (Number(i.price) || 0), 0);
-  const isBengaluru = /bangalore|bengaluru/i.test(`${form.city} ${matchedArea?.name || ""} ${matchedArea?.city || ""}`);
+  const normalizedCity = (form.city || "").trim();
+  const normalizedPincode = (form.pincode || "").trim();
+  const isLikelyBengaluruPincode = (value) => {
+    if (!value) return false;
+    const digits = value.replace(/\D/g, "");
+    if (digits.length < 3) return false;
+    const prefixes = ["560", "561", "562", "563", "564", "565", "566", "567", "568", "569", "570", "571", "572", "573", "574", "575", "576", "577", "578", "579"];
+    return prefixes.some((prefix) => digits.startsWith(prefix));
+  };
+  const isBengaluru = /(bangalore|banglore|bengaluru)/i.test(`${normalizedCity} ${matchedArea?.name || ""} ${matchedArea?.city || ""}`) || isLikelyBengaluruPincode(normalizedPincode);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -179,9 +188,9 @@ export default function Checkout() {
     <div className="pt-28 md:pt-32 pb-24">
       <div className="container-luxe">
         <PageHeader
-          eyebrow="Home Trial · Bengaluru"
-          title="Book a home trial"
-          intro="Tell us where to bring your shortlisted pieces. We carry them to your doorstep — view them in person, and keep only what you love. Payment is collected only for the pieces you choose to keep."
+          eyebrow="Two Days Delivery · Bengaluru"
+          title="Two Days Delivery"
+          intro="Share your delivery details, and we’ll bring your chosen saree straight to your doorstep. Pay when it arrives and collect it with ease. A simple, convenient way to shop your favourite sarees from the comfort of your home."
         />
 
         <form onSubmit={handleSubmit} className="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-16">
@@ -294,13 +303,10 @@ export default function Checkout() {
               </div>
             </section>
 
-            {/* Notes & measurements */}
+            {/* Notes */}
             <section>
               <h2 className="font-display text-2xl mb-5">Preferences</h2>
               <div className="grid grid-cols-1 gap-4">
-                <Field label="Blouse measurements (optional)" hint='e.g. bust 36", waist 32", shoulder 14"'>
-                  <textarea className={inputCls + " min-h-[80px]"} value={form.measurements} onChange={set("measurements")} />
-                </Field>
                 <Field label="Notes (optional)" hint="Special requests, colour preferences, or occasion details">
                   <textarea className={inputCls + " min-h-[80px]"} value={form.notes} onChange={set("notes")} />
                 </Field>
@@ -339,7 +345,7 @@ export default function Checkout() {
               disabled={submitting}
               className="mt-6 w-full inline-flex items-center justify-center gap-2 bg-foreground text-background px-6 py-4 text-[11px] uppercase tracking-luxe-sm disabled:opacity-50 hover:bg-accent transition-colors"
             >
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Submit request <ArrowRight className="w-4 h-4" /></>}
+              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Place Order <ArrowRight className="w-4 h-4" /></>}
             </button>}
             {!isBengaluru && <p className="mt-6 text-xs text-muted-foreground">Enter a Bengaluru or Bangalore city address to request a home trial. Customers elsewhere can place a paid order from the cart.</p>}
           </aside>

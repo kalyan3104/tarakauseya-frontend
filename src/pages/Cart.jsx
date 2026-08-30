@@ -58,7 +58,7 @@ export default function Cart() {
 
             <div className="mt-8 flex flex-wrap gap-3">
               <Link to="/checkout" className="inline-flex items-center gap-3 border border-foreground px-8 py-4 text-[11px] uppercase tracking-luxe-sm hover:bg-foreground hover:text-background transition-colors">
-                Home trial (Bengaluru only) <ArrowRight className="w-4 h-4" />
+                Two Days Delivery (Bengaluru only) <ArrowRight className="w-4 h-4" />
               </Link>
               <Link to="/payment" className="inline-flex items-center gap-3 bg-foreground text-background px-8 py-4 text-[11px] uppercase tracking-luxe-sm hover:bg-accent transition-colors">
                 Place order <ArrowRight className="w-4 h-4" />
