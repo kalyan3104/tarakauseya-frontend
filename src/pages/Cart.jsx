@@ -54,11 +54,14 @@ export default function Cart() {
               <p className="text-sm text-muted-foreground font-light">{items.length} {items.length === 1 ? "piece" : "pieces"} selected</p>
               <p className="font-display text-2xl">{formatINR(total)}</p>
             </div>
-            <p className="mt-2 text-xs text-muted-foreground font-light">Indicative pricing — final selection and pricing are confirmed at your home trial. No payment is collected now.</p>
+            <p className="mt-2 text-xs text-muted-foreground font-light">Choose a Bengaluru home trial, or place a cash-on-delivery order for delivery.</p>
 
-            <div className="mt-8">
-              <Link to="/checkout" className="inline-flex items-center gap-3 bg-foreground text-background px-8 py-4 text-[11px] uppercase tracking-luxe-sm hover:bg-accent transition-colors">
-                Continue to home trial request <ArrowRight className="w-4 h-4" />
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link to="/checkout" className="inline-flex items-center gap-3 border border-foreground px-8 py-4 text-[11px] uppercase tracking-luxe-sm hover:bg-foreground hover:text-background transition-colors">
+                Home trial (Bengaluru only) <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link to="/payment" className="inline-flex items-center gap-3 bg-foreground text-background px-8 py-4 text-[11px] uppercase tracking-luxe-sm hover:bg-accent transition-colors">
+                Place order <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
           </>

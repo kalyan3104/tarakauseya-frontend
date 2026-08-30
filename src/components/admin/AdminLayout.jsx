@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { LayoutDashboard, Package, FolderTree, Boxes, Image, BarChart3, ArrowLeft, UploadCloud, CalendarCheck, LogOut, User } from "lucide-react";
+import { LayoutDashboard, Package, FolderTree, Boxes, Image, BarChart3, ArrowLeft, UploadCloud, CalendarCheck, ShoppingBag, LogOut, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/AuthContext";
 
@@ -13,6 +13,7 @@ const NAV = [
   { label: "Analytics", path: "/admin/analytics", icon: BarChart3 },
   { label: "Bulk Import", path: "/admin/import", icon: UploadCloud },
   { label: "Trial Requests", path: "/admin/trials", icon: CalendarCheck },
+  { label: "Orders", path: "/admin/orders", icon: ShoppingBag },
 ];
 
 export default function AdminLayout() {

@@ -53,24 +53,39 @@ export default function Checkout() {
   }, [areas, form.pincode]);
 
   const total = items.reduce((s, i) => s + (Number(i.price) || 0), 0);
+  const isBengaluru = /bangalore|bengaluru/i.test(`${form.city} ${matchedArea?.name || ""} ${matchedArea?.city || ""}`);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
   const fetchLocation = () => {
     setLocating(true);
     setError("");
+
+    const isSecureContext = window.isSecureContext || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+    if (!isSecureContext) {
+      setError("Location access requires a secure page or localhost. Please allow location access or enter your address manually.");
+      setLocating(false);
+      return;
+    }
+
     if (!navigator.geolocation) {
       setError("Geolocation is not supported by your browser. Please enter your address manually.");
       setLocating(false);
       return;
     }
+
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         setLocating(false);
       },
       (err) => {
-        setError("Could not fetch your location. " + err.message);
+        const message = err.code === 1
+          ? "Location permission was denied. Please allow access in your browser and try again, or enter your address manually."
+          : err.code === 2
+            ? "Location is currently unavailable. Please try again or enter your address manually."
+            : "Could not fetch your location. Please try again or enter your address manually.";
+        setError(message);
         setLocating(false);
       },
       { enableHighAccuracy: true, timeout: 10000 }
@@ -80,6 +95,10 @@ export default function Checkout() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.customer_name || !form.phone || !form.address || !form.pincode) return;
+    if (!isBengaluru) {
+      setError("Home trials are currently available only in Bengaluru.");
+      return;
+    }
     if (!isAuthenticated || !user?.id) {
       setError("Please sign in before placing an order so it can appear in My Orders.");
       return;
@@ -160,7 +179,7 @@ export default function Checkout() {
     <div className="pt-28 md:pt-32 pb-24">
       <div className="container-luxe">
         <PageHeader
-          eyebrow="Home Trial"
+          eyebrow="Home Trial · Bengaluru"
           title="Book a home trial"
           intro="Tell us where to bring your shortlisted pieces. We carry them to your doorstep — view them in person, and keep only what you love. Payment is collected only for the pieces you choose to keep."
         />
@@ -199,14 +218,21 @@ export default function Checkout() {
               </div>
 
               <div className="mt-5">
-                <button
-                  type="button"
-                  onClick={fetchLocation}
-                  className="inline-flex items-center gap-2 text-[11px] uppercase tracking-luxe-sm border border-foreground/30 px-5 py-3 hover:bg-foreground hover:text-background transition-colors"
-                >
-                  {locating ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" />}
-                  {locating ? "Locating…" : "Use my location"}
-                </button>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                  <button
+                    type="button"
+                    onClick={fetchLocation}
+                    className="inline-flex items-center gap-2 text-[11px] uppercase tracking-luxe-sm border border-foreground/30 px-5 py-3 hover:bg-foreground hover:text-background transition-colors"
+                  >
+                    {locating ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" />}
+                    {locating ? "Locating…" : "Use my location"}
+                  </button>
+                  {!coords && (
+                    <p className="text-[10px] uppercase tracking-luxe-sm text-muted-foreground">
+                      Enable location in your browser or enter the address manually
+                    </p>
+                  )}
+                </div>
                 {coords && (
                   <p className="mt-3 text-xs text-muted-foreground font-light">
                     Location captured: {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}
@@ -308,13 +334,14 @@ export default function Checkout() {
             <p className="mt-3 text-xs text-muted-foreground font-light leading-relaxed">
               No payment is collected now. You pay only for the pieces you keep, at the time of trial.
             </p>
-            <button
+            {isBengaluru && <button
               type="submit"
               disabled={submitting}
               className="mt-6 w-full inline-flex items-center justify-center gap-2 bg-foreground text-background px-6 py-4 text-[11px] uppercase tracking-luxe-sm disabled:opacity-50 hover:bg-accent transition-colors"
             >
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Submit request <ArrowRight className="w-4 h-4" /></>}
-            </button>
+            </button>}
+            {!isBengaluru && <p className="mt-6 text-xs text-muted-foreground">Enter a Bengaluru or Bangalore city address to request a home trial. Customers elsewhere can place a paid order from the cart.</p>}
           </aside>
         </form>
       </div>

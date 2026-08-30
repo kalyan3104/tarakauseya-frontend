@@ -48,6 +48,7 @@ export default function MyOrders() {
               {orders.map((order) => {
                 const current = STATUS_INDEX[order.status] ?? 0;
                 const cancelled = order.status === "cancelled";
+                const addressText = [order.address, order.city, order.pincode].filter(Boolean).join(", ");
                 return (
                   <article key={order.id} className="border border-border bg-card">
                     <div className="flex items-center justify-between gap-4 p-5 border-b border-border">
@@ -56,6 +57,15 @@ export default function MyOrders() {
                     </div>
                     <div className="p-5 space-y-6">
                       <div className="space-y-3">{(order.items || []).map((item, index) => <div key={index} className="flex items-center gap-4">{item.image ? <Image src={item.image} alt={item.name || "Saree"} className="w-12 h-14 shrink-0" /> : <div className="w-12 h-14 shrink-0 bg-secondary" />}<Link to={item.slug ? `/saree/${item.slug}` : "/sarees"} className="text-sm hover:underline">{item.name || "Saree"}</Link></div>)}</div>
+
+                      <div className="border-t border-border pt-5 space-y-2 text-sm">
+                        <p className="text-[10px] uppercase tracking-luxe-sm text-muted-foreground">Delivery details</p>
+                        <p className="font-light">{order.customer_name || order.name || "Customer"}</p>
+                        <p className="font-light">{order.phone || "Phone not provided"}</p>
+                        {addressText ? <p className="font-light text-muted-foreground">{addressText}</p> : <p className="font-light text-muted-foreground">Address not available</p>}
+                        {order.payment_status && <p className="text-[10px] uppercase tracking-luxe-sm text-muted-foreground mt-2">Payment: {order.payment_status === "cod" ? "Cash on delivery" : order.payment_status}</p>}
+                      </div>
+
                       {!cancelled && <ol className="grid grid-cols-4 gap-2 border-t border-border pt-5">{STEPS.map((step, index) => { const Icon = step.icon; const done = index <= current; return <li key={step.key} className="flex flex-col items-center text-center gap-2"><span className={`w-9 h-9 rounded-full flex items-center justify-center border ${done ? "bg-foreground text-background border-foreground" : "border-border text-muted-foreground"}`}><Icon className="w-4 h-4" /></span><span className={`text-[10px] uppercase tracking-luxe-sm ${done ? "text-foreground" : "text-muted-foreground"}`}>{step.label}</span></li>; })}</ol>}
                       {cancelled && <p className="text-sm text-destructive">This order was cancelled.</p>}
                     </div>

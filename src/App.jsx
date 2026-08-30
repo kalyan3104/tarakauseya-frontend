@@ -28,7 +28,9 @@ import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import Cart from '@/pages/Cart';
 import Checkout from '@/pages/Checkout';
+import Payment from '@/pages/Payment';
 import AdminTrialRequests from '@/pages/admin/AdminTrialRequests';
+import AdminOrders from '@/pages/admin/AdminOrders';
 import MyOrders from '@/pages/MyOrders';
 // Add page imports here
 
@@ -66,6 +68,7 @@ return (
       <Route path="/journal" element={<Journal />} />
       <Route path="/cart" element={<Cart />} />
       <Route path="/checkout" element={<Checkout />} />
+      <Route path="/payment" element={<Payment />} />
     </Route>
     <Route element={<ProtectedRoute requireAdmin={false} unauthenticatedElement={<Navigate to="/login" replace />} />}>
       <Route element={<SiteLayout />}>
@@ -82,6 +85,7 @@ return (
         <Route path="analytics" element={<AdminAnalytics />} />
         <Route path="import" element={<AdminImport />} />
         <Route path="trials" element={<AdminTrialRequests />} />
+        <Route path="orders" element={<AdminOrders />} />
         </Route>
     </Route>
     <Route path="*" element={<PageNotFound />} />

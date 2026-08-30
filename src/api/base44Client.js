@@ -220,6 +220,7 @@ export const base44 = {
     Inventory: buildEntityClient('inventory'),
     MediaAsset: buildEntityClient('media-assets'),
     TrialRequest: buildEntityClient('trial-requests'),
+    Order: buildEntityClient('orders'),
     ServiceArea: buildEntityClient('service-areas'),
     InventoryLog: buildEntityClient('inventory-logs'),
   },
@@ -227,6 +228,13 @@ export const base44 = {
   auth,
   account: {
     orders: async () => request('/account/orders'),
+  },
+  orders: {
+    createPaid: async (payload) => request('/orders', { method: 'POST', body: payload }),
+  },
+  payments: {
+    create: async (payload) => request('/payments/create', { method: 'POST', body: payload }),
+    verify: async (payload) => request('/payments/verify', { method: 'POST', body: payload }),
   },
   functions: {
     invoke: async (name, body) => ({ data: await request(`/functions/${encodeURIComponent(name)}`, { method: 'POST', body }) }),
