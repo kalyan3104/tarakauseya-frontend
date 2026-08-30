@@ -15,7 +15,8 @@ export default function Cart() {
         <PageHeader
           eyebrow="Selection"
           title="Your Cart"
-          intro="Pieces shortlisted for a home trial. We carry them to your doorstep — view and feel them in person, and keep only what you love."
+          intro="A beautiful choice awaits.
+          Complete your order and bring them home."
         />
 
         {items.length === 0 ? (
@@ -54,11 +55,11 @@ export default function Cart() {
               <p className="text-sm text-muted-foreground font-light">{items.length} {items.length === 1 ? "piece" : "pieces"} selected</p>
               <p className="font-display text-2xl">{formatINR(total)}</p>
             </div>
-            <p className="mt-2 text-xs text-muted-foreground font-light">Choose a Bengaluru home trial, or place a cash-on-delivery order for delivery.</p>
+            <p className="mt-2 text-xs text-muted-foreground font-light">Complete your order with your delivery details. Cash on Delivery is available.</p>
 
             <div className="mt-8 flex flex-wrap gap-3">
               <Link to="/checkout" className="inline-flex items-center gap-3 border border-foreground px-8 py-4 text-[11px] uppercase tracking-luxe-sm hover:bg-foreground hover:text-background transition-colors">
-                Delivery With 2 Days in bengaluru ( other cities coming soon). <ArrowRight className="w-4 h-4" />
+                Delivery With 2 Days -bengaluru ( other cities coming soon). <ArrowRight className="w-4 h-4" />
               </Link>
               <Link to="/payment" className="inline-flex items-center gap-3 bg-foreground text-background px-8 py-4 text-[11px] uppercase tracking-luxe-sm hover:bg-accent transition-colors">
                 Place order <ArrowRight className="w-4 h-4" />
