@@ -17,6 +17,9 @@ const SORTS = [
 
 const FABRICS = ["Silk", "Cotton", "Organza", "Handloom", "Tussar"];
 const OCCASIONS = ["Bridal", "Wedding", "Festive", "Everyday"];
+const isHandcraftProduct = (product) => product.collection?.toLowerCase().includes("handcraft");
+const collectionNameFromSlug = (slug) =>
+  slug.replace(/-/g, " ").replace(/\b\w/g, (character) => character.toUpperCase());
 
 export default function Sarees() {
   const [params, setParams] = useSearchParams();
@@ -30,7 +33,7 @@ export default function Sarees() {
 
   const query = useMemo(() => {
     const q = { active: true };
-    if (collection) q.collection = collection.charAt(0).toUpperCase() + collection.slice(1);
+    if (collection) q.collection = collectionNameFromSlug(collection);
     if (fabric) q.fabric = fabric;
     if (occasion) q.occasion = occasion;
     return q;
@@ -43,6 +46,7 @@ export default function Sarees() {
 
   const products = useMemo(() => {
     let list = data || [];
+    if (!collection) list = list.filter((product) => !isHandcraftProduct(product));
     if (search.trim()) {
       const s = search.trim().toLowerCase();
       list = list.filter(
@@ -52,7 +56,7 @@ export default function Sarees() {
       );
     }
     return list;
-  }, [data, search]);
+  }, [collection, data, search]);
 
   const setParam = (key, value) => {
     const next = new URLSearchParams(params);
