@@ -21,7 +21,7 @@ export default function Navbar() {
   const navigate = useNavigate();
   const [search, setSearch] = useState(() => new URLSearchParams(location.search).get("q") || "");
   const { count } = useCart();
-  const { isAuthenticated, isAdmin } = useAuth();
+  const { isAdmin } = useAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -115,6 +115,7 @@ export default function Navbar() {
               </span>
             )}
           </Link>
+          <AccountMenu isAdmin={isAdmin} />
           <button
             className="p-2 -mr-2"
             onClick={() => setOpen((v) => !v)}
@@ -153,9 +154,6 @@ export default function Navbar() {
             >
               Cart{count > 0 ? ` (${count})` : ""}
             </Link>
-            <div className="pt-2 border-t border-border">
-              <AccountMenu isAdmin={isAdmin} />
-            </div>
           </nav>
         </div>
       )}
