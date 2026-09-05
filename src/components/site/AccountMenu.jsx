@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { User, LogOut, ChevronDown, Package } from "lucide-react";
+import { User, LogOut, ChevronDown, Package, X } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { cn } from "@/lib/utils";
 
@@ -8,6 +8,7 @@ export default function AccountMenu({ isAdmin: propIsAdmin }) {
   const { user, isAuthenticated, logout, isAdmin: authIsAdmin } = useAuth();
   const isAdmin = propIsAdmin ?? authIsAdmin;
   const [open, setOpen] = useState(false);
+  const [showLoginHint, setShowLoginHint] = useState(true);
   const ref = useRef(null);
 
   useEffect(() => {
@@ -20,12 +21,32 @@ export default function AccountMenu({ isAdmin: propIsAdmin }) {
 
   if (!isAuthenticated) {
     return (
-      <Link
-        to="/login"
-        className="text-[11px] uppercase tracking-luxe-sm border border-foreground/40 px-4 py-2 hover:bg-foreground hover:text-background transition-colors duration-300"
-      >
-        Login
-      </Link>
+      <div className="relative">
+        <Link
+          to="/login"
+          className="text-[11px] uppercase tracking-luxe-sm border border-foreground/40 px-4 py-2 hover:bg-foreground hover:text-background transition-colors duration-300"
+        >
+          Login
+        </Link>
+        {showLoginHint && (
+          <div className="absolute right-0 top-full mt-3 w-64 bg-foreground text-background shadow-lg">
+            <div className="p-4 pr-10 relative">
+              <p className="text-xs font-medium">A smoother shopping experience awaits💎🛍️🛒</p>
+              <p className="text-[11px] leading-relaxed text-background/70 mt-1.5">
+                Log in to save your favourites , track your orders, and enjoy a smooth checkout experience.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowLoginHint(false)}
+                className="absolute top-3 right-3 p-1 text-background/60 hover:text-background transition-colors"
+                aria-label="Dismiss login message"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     );
   }
 
