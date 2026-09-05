@@ -31,7 +31,7 @@ export default function MyOrders() {
 
   return (
     <>
-      <PageHeader eyebrow="Your Account" title="My Orders" intro="Follow your home-trial requests and the pieces prepared for you." />
+      <PageHeader eyebrow="Your Account" title="My Orders" intro="Follow your Delivery requests and the pieces prepared for you." />
       <section className="py-12 md:py-16">
         <div className="container-luxe max-w-3xl">
           {isLoading ? <p className="text-sm text-muted-foreground">Loading your orders…</p> : isError ? (

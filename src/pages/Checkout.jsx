@@ -167,7 +167,7 @@ export default function Checkout() {
         <CheckCircle2 className="w-12 h-12 text-accent mx-auto" />
         <h1 className="font-display text-4xl md:text-5xl mt-6">Request received</h1>
         <p className="mt-5 text-muted-foreground font-light leading-relaxed">
-          Thank you, {done.customer_name}. Our atelier will confirm your home trial visit
+          Thank you, {done.customer_name}. Our atelier will confirm your Delivery visit
           {done.preferred_slot ? <> for <span className="text-foreground">{done.preferred_slot}</span></> : " in your area"} shortly.
           We'll contact you on <span className="text-foreground">{done.phone}</span> to finalise.
         </p>
@@ -294,7 +294,7 @@ export default function Checkout() {
                     </div>
                   ) : (
                     <p className="mt-3 text-xs text-muted-foreground font-light">
-                      We don't have preset slots for pincode {form.pincode}. Our atelier will contact you to arrange a suitable time.
+                      We connect with you - {form.pincode}. - Our atelier will contact you to arrange a suitable time.
                     </p>
                   )
                 ) : (

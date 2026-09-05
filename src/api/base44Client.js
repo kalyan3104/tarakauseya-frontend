@@ -172,6 +172,7 @@ const auth = {
     const result = await request('/auth/supabase-exchange', {
       method: 'POST',
       headers: { Authorization: `Bearer ${accessToken}` },
+      body: {},
     });
     if (result?.access_token) {
       localStorage.setItem(TOKEN_KEY, result.access_token);
@@ -188,6 +189,33 @@ const auth = {
     if (error) throw error;
     return { ok: true };
   },
+  signInWithGoogleCredential: async (credential, nonce) => {
+    localStorage.removeItem(TOKEN_KEY);
+    await supabase.auth.signOut();
+    const { data, error } = await supabase.auth.signInWithIdToken({
+      provider: 'google',
+      token: credential,
+      ...(nonce ? { nonce } : {}),
+    });
+    if (error) throw error;
+    const accessToken = data?.session?.access_token;
+    if (!accessToken) throw new Error('Google sign-in did not return a session');
+    const result = await request('/auth/supabase-exchange', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${accessToken}` },
+      body: {},
+    });
+    if (result?.access_token) {
+      localStorage.setItem(TOKEN_KEY, result.access_token);
+    }
+    const supabaseEmail = data?.user?.email?.trim().toLowerCase();
+    const backendEmail = result?.user?.email?.trim().toLowerCase();
+    if (supabaseEmail && backendEmail && supabaseEmail !== backendEmail) {
+      localStorage.removeItem(TOKEN_KEY);
+      throw new Error('Google account did not match the signed-in user');
+    }
+    return result;
+  },
   resendPhoneOtp: async (phone) => {
     const normalizedPhone = normalizePhone(phone);
     if (!/^\+91[6-9]\d{9}$/.test(normalizedPhone)) {
@@ -203,6 +231,7 @@ const auth = {
   exchangeSupabaseToken: async (supabaseToken) => request('/auth/supabase-exchange', {
     method: 'POST',
     headers: { Authorization: `Bearer ${supabaseToken}` },
+    body: {},
   }),
   setToken: (token) => localStorage.setItem(TOKEN_KEY, token),
   logout: async () => {
