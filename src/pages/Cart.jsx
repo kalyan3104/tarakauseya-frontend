@@ -1,13 +1,14 @@
 import { Link } from "react-router-dom";
-import { useCart } from "@/lib/CartContext";
+import { MAX_ITEM_QUANTITY, useCart } from "@/lib/CartContext";
 import { Image } from "@/components/ui/image";
 import { formatINR } from "@/lib/format";
 import PageHeader from "@/components/site/PageHeader";
-import { ArrowLeft, ArrowRight, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Minus, Plus, X } from "lucide-react";
 
 export default function Cart() {
-  const { items, removeItem } = useCart();
-  const total = items.reduce((s, i) => s + (Number(i.price) || 0), 0);
+  const { items, updateQuantity, removeItem } = useCart();
+  const total = items.reduce((s, i) => s + (Number(i.price) || 0) * (i.quantity || 1), 0);
+  const itemCount = items.reduce((s, i) => s + (i.quantity || 1), 0);
 
   return (
     <div className="pt-28 md:pt-32 pb-24">
@@ -41,10 +42,17 @@ export default function Cart() {
                       <p className="text-xs text-muted-foreground mt-1">SKU {item.sku}</p>
                     </div>
                     <div className="flex items-center justify-between mt-3">
-                      <span className="font-display text-xl">{formatINR(item.price)}</span>
-                      <button onClick={() => removeItem(item.id)} className="text-[11px] uppercase tracking-luxe-sm text-muted-foreground hover:text-destructive flex items-center gap-1">
-                        <X className="w-3.5 h-3.5" /> Remove
-                      </button>
+                      <div className="flex items-center gap-4">
+                        <span className="font-display text-xl">{formatINR(Number(item.price) * (item.quantity || 1))}</span>
+                        <div className="flex items-center border border-border">
+                          <button onClick={() => updateQuantity(item.id, (item.quantity || 1) - 1)} aria-label="Decrease quantity" className="p-2"><Minus className="h-3.5 w-3.5" /></button>
+                          <span className="min-w-8 text-center text-sm">{item.quantity || 1}</span>
+                          <button onClick={() => updateQuantity(item.id, (item.quantity || 1) + 1)} disabled={(item.quantity || 1) >= MAX_ITEM_QUANTITY} aria-label="Increase quantity" className="p-2 disabled:cursor-not-allowed disabled:opacity-30"><Plus className="h-3.5 w-3.5" /></button>
+                        </div>
+                        <button onClick={() => removeItem(item.id)} className="text-[11px] uppercase tracking-luxe-sm text-muted-foreground hover:text-destructive flex items-center gap-1">
+                          <X className="w-3.5 h-3.5" /> Remove
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -52,7 +60,7 @@ export default function Cart() {
             </div>
 
             <div className="mt-8 flex items-center justify-between">
-              <p className="text-sm text-muted-foreground font-light">{items.length} {items.length === 1 ? "piece" : "pieces"} selected</p>
+              <p className="text-sm text-muted-foreground font-light">{itemCount} {itemCount === 1 ? "piece" : "pieces"} selected</p>
               <p className="font-display text-2xl">{formatINR(total)}</p>
             </div>
             <p className="mt-2 text-xs text-muted-foreground font-light">Complete your order with your delivery details. Cash on Delivery is available.</p>

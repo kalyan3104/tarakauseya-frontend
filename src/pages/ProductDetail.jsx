@@ -8,7 +8,7 @@ import Reveal from "@/components/site/Reveal";
 import ProductCard from "@/components/site/ProductCard";
 import { ArrowLeft, ChevronLeft, ChevronRight, Plus, Minus, ShoppingBag, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useCart } from "@/lib/CartContext";
+import { MAX_ITEM_QUANTITY, useCart } from "@/lib/CartContext";
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -16,7 +16,7 @@ export default function ProductDetail() {
   const [activeImg, setActiveImg] = useState(0);
   const [openSpec, setOpenSpec] = useState(null);
   const [touchStart, setTouchStart] = useState(null);
-  const { addItem } = useCart();
+  const { items, addItem, updateQuantity } = useCart();
   const [added, setAdded] = useState(false);
 
   const { data: product, isLoading } = useQuery({
@@ -53,6 +53,8 @@ export default function ProductDetail() {
   const images = product.images?.length ? product.images : [product.cover_image].filter(Boolean);
   const price = product.discount_price && product.discount_price < product.price
     ? product.discount_price : product.price;
+  const cartItem = items.find((item) => item.id === product.id);
+  const quantity = cartItem?.quantity || 0;
 
   const specs = [
     { label: "Fabric", value: product.fabric },
@@ -173,13 +175,24 @@ export default function ProductDetail() {
             </div>
 
             <div className="mt-8 space-y-3">
-              <button
-                disabled={product.out_of_stock}
-                onClick={() => { addItem(product); setAdded(true); setTimeout(() => setAdded(false), 2000); }}
-                className="w-full text-[11px] uppercase tracking-luxe-sm bg-foreground text-background px-7 py-4 hover:bg-accent transition-colors duration-300 flex items-center justify-center gap-2 disabled:bg-secondary disabled:text-muted-foreground disabled:cursor-not-allowed"
-              >
-                {product.out_of_stock ? "Out of stock" : added ? <><Check className="w-4 h-4" /> Added to cart</> : <><ShoppingBag className="w-4 h-4" /> Add to cart</>}
-              </button>
+              {quantity > 0 ? (
+                <>
+                  <div className="flex h-14 items-center justify-between border border-foreground px-5">
+                    <button onClick={() => updateQuantity(product.id, quantity - 1)} aria-label="Decrease quantity" className="p-2 hover:bg-secondary"><Minus className="h-4 w-4" /></button>
+                    <span className="text-sm">{quantity} in cart</span>
+                    <button onClick={() => addItem(product)} disabled={quantity >= MAX_ITEM_QUANTITY} aria-label="Increase quantity" className="p-2 hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-30"><Plus className="h-4 w-4" /></button>
+                  </div>
+                  {quantity >= MAX_ITEM_QUANTITY && <p className="text-center text-xs text-muted-foreground">Maximum 10 per product</p>}
+                </>
+              ) : (
+                <button
+                  disabled={product.out_of_stock}
+                  onClick={() => { addItem(product); setAdded(true); setTimeout(() => setAdded(false), 2000); }}
+                  className="w-full text-[11px] uppercase tracking-luxe-sm bg-foreground text-background px-7 py-4 hover:bg-accent transition-colors duration-300 flex items-center justify-center gap-2 disabled:bg-secondary disabled:text-muted-foreground disabled:cursor-not-allowed"
+                >
+                  {product.out_of_stock ? "Out of stock" : added ? <><Check className="w-4 h-4" /> Added to cart</> : <><ShoppingBag className="w-4 h-4" /> Add to cart</>}
+                </button>
+              )}
               <div className="flex flex-col sm:flex-row gap-3">
                 <a
                   href="https://instagram.com"

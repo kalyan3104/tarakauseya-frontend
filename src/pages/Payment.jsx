@@ -40,7 +40,8 @@ export default function Payment() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [order, setOrder] = useState(null);
-  const total = items.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
+  const total = items.reduce((sum, item) => sum + (Number(item.price) || 0) * (item.quantity || 1), 0);
+  const itemCount = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
   const set = (key) => (event) => setForm((current) => ({ ...current, [key]: event.target.value }));
 
   useEffect(() => {
@@ -92,8 +93,8 @@ export default function Payment() {
         customer_name: form.name,
         payment_status: "cod",
         status: "placed",
-        items: items.map(({ id, name, slug, sku, price, image, collection }) => ({ product_id: id, name, slug, sku, price, image, collection })),
-        item_count: items.length,
+        items: items.map(({ id, name, slug, sku, price, image, collection, quantity }) => ({ product_id: id, name, slug, sku, price, image, collection, quantity: quantity || 1 })),
+        item_count: itemCount,
         total,
       });
 

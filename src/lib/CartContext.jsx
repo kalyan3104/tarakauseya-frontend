@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from "rea
 
 const CartContext = createContext(null);
 const STORAGE_KEY = "varahi_cart";
+export const MAX_ITEM_QUANTITY = 10;
 
 export function CartProvider({ children }) {
   const [items, setItems] = useState(() => {
@@ -19,7 +20,10 @@ export function CartProvider({ children }) {
 
   const addItem = useCallback((product) => {
     setItems((prev) => {
-      if (prev.some((p) => p.id === product.id)) return prev;
+      const existing = prev.find((p) => p.id === product.id);
+      if (existing) {
+        return prev.map((p) => p.id === product.id ? { ...p, quantity: Math.min(MAX_ITEM_QUANTITY, (p.quantity || 1) + 1) } : p);
+      }
       const price =
         product.discount_price && product.discount_price < product.price
           ? product.discount_price
@@ -34,9 +38,16 @@ export function CartProvider({ children }) {
           price,
           image: product.cover_image || product.images?.[0],
           collection: product.collection,
+          quantity: 1,
         },
       ];
     });
+  }, []);
+
+  const updateQuantity = useCallback((id, quantity) => {
+    setItems((prev) => prev
+      .map((item) => item.id === id ? { ...item, quantity: Math.min(MAX_ITEM_QUANTITY, Math.max(0, quantity)) } : item)
+      .filter((item) => item.quantity > 0));
   }, []);
 
   const removeItem = useCallback((id) => {
@@ -45,10 +56,10 @@ export function CartProvider({ children }) {
 
   const clear = useCallback(() => setItems([]), []);
 
-  const count = items.length;
+  const count = items.reduce((total, item) => total + (item.quantity || 1), 0);
 
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, clear, count }}>
+    <CartContext.Provider value={{ items, addItem, updateQuantity, removeItem, clear, count }}>
       {children}
     </CartContext.Provider>
   );

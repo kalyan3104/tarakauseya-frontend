@@ -52,7 +52,8 @@ export default function Checkout() {
     );
   }, [areas, form.pincode]);
 
-  const total = items.reduce((s, i) => s + (Number(i.price) || 0), 0);
+  const total = items.reduce((s, i) => s + (Number(i.price) || 0) * (i.quantity || 1), 0);
+  const itemCount = items.reduce((s, i) => s + (i.quantity || 1), 0);
   const normalizedCity = (form.city || "").trim();
   const normalizedPincode = (form.pincode || "").trim();
   const isLikelyBengaluruPincode = (value) => {
@@ -134,10 +135,11 @@ export default function Checkout() {
           name: i.name,
           sku: i.sku,
           price: i.price,
+          quantity: i.quantity || 1,
           image: i.image,
           collection: i.collection,
         })),
-        item_count: items.length,
+        item_count: itemCount,
         status: "requested",
       };
       const created = await base44.entities.TrialRequest.create(payload);
@@ -318,7 +320,7 @@ export default function Checkout() {
           <aside className="lg:sticky lg:top-28 h-fit border border-border p-6 bg-card">
             <h2 className="font-display text-2xl">Your selection</h2>
             <p className="text-[10px] uppercase tracking-luxe-sm text-muted-foreground mt-1">
-              {items.length} {items.length === 1 ? "piece" : "pieces"}
+              {itemCount} {itemCount === 1 ? "piece" : "pieces"}
             </p>
             <div className="mt-5 space-y-4 max-h-80 overflow-y-auto">
               {items.map((item) => (
