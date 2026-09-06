@@ -20,13 +20,23 @@ export default function ProductCard({ product, index = 0 }) {
           sizes="(max-width: 1023px) 50vw, 30vw"
         />
         {product.out_of_stock && (
-          <span className="absolute top-4 right-4 text-[10px] uppercase tracking-luxe-sm bg-background/95 text-red-700 px-3 py-1.5">
+          <span className={`absolute right-1.5 text-[7px] uppercase tracking-[0.12em] bg-background/95 text-red-700 px-1 py-0.5 ${product.trending ? "top-7" : "top-1.5"}`}>
             Out of stock
           </span>
         )}
         {product.new_arrival && (
-          <span className="absolute top-4 left-4 text-[10px] uppercase tracking-luxe-sm bg-background/90 px-3 py-1.5">
+          <span className="absolute top-1.5 left-1.5 text-[7px] uppercase tracking-[0.12em] bg-background/90 px-1 py-0.5">
             New Arrival
+          </span>
+        )}
+        {product.best_seller && (
+          <span className={`absolute left-1.5 text-[7px] uppercase tracking-[0.12em] bg-amber-700 text-white px-1 py-0.5 ${product.new_arrival ? "top-7" : "top-1.5"}`}>
+            Best Seller
+          </span>
+        )}
+        {product.trending && (
+          <span className="absolute top-1.5 right-1.5 text-[7px] uppercase tracking-[0.12em] bg-red-700 text-white px-1 py-0.5">
+            Trending
           </span>
         )}
         <div className="absolute inset-x-0 bottom-0 p-4 translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">

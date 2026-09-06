@@ -168,7 +168,8 @@ export default function ProductDetail() {
 
             <div className="mt-8 flex flex-wrap gap-2">
               {product.out_of_stock && <Tag>Out of Stock</Tag>}
-              {product.trending && <Tag>Trending</Tag>}
+              {product.trending && <Tag tone="trending">Trending</Tag>}
+              {product.best_seller && <Tag tone="bestSeller">Best Seller</Tag>}
               {product.new_arrival && <Tag>New Arrival</Tag>}
               {product.featured && <Tag>Featured</Tag>}
               {product.blouse_included && <Tag>Blouse Included</Tag>}
@@ -263,6 +264,17 @@ export default function ProductDetail() {
   );
 }
 
-function Tag({ children }) {
-  return <span className="text-[10px] uppercase tracking-luxe-sm border border-border px-3 py-1.5">{children}</span>;
+function Tag({ children, tone }) {
+  return (
+    <span className={cn(
+      "text-[10px] uppercase tracking-luxe-sm border px-3 py-1.5",
+      tone === "trending"
+        ? "border-red-700 bg-red-700 text-white"
+        : tone === "bestSeller"
+          ? "border-amber-700 bg-amber-700 text-white"
+          : "border-border"
+    )}>
+      {children}
+    </span>
+  );
 }

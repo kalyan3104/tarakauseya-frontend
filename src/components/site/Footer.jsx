@@ -19,7 +19,7 @@ export default function Footer() {
               <a href="mailto:kalyan@varahikauseya.studio" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Email">
                 <Mail className="w-[18px] h-[18px]" />
               </a>
-              <a href="tel:+910000000000" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Phone">
+              <a href="tel:+918520824339" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Phone">
                 <Phone className="w-[18px] h-[18px]" />
               </a>
             </div>
