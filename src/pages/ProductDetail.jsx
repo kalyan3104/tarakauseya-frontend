@@ -15,6 +15,7 @@ export default function ProductDetail() {
   const navigate = useNavigate();
   const [activeImg, setActiveImg] = useState(0);
   const [openSpec, setOpenSpec] = useState(null);
+  const [touchStart, setTouchStart] = useState(null);
   const { addItem } = useCart();
   const [added, setAdded] = useState(false);
 
@@ -74,6 +75,19 @@ export default function ProductDetail() {
 
   const enquirySubject = encodeURIComponent(`Enquiry: ${product.name}`);
 
+  const handleGalleryTouchStart = (event) => {
+    setTouchStart(event.touches[0].clientX);
+  };
+
+  const handleGalleryTouchEnd = (event) => {
+    if (touchStart == null) return;
+    const distance = event.changedTouches[0].clientX - touchStart;
+    if (Math.abs(distance) > 45 && images.length > 1) {
+      setActiveImg((current) => (distance < 0 ? (current + 1) % images.length : (current - 1 + images.length) % images.length));
+    }
+    setTouchStart(null);
+  };
+
   return (
     <div className="pt-24 md:pt-28">
       <div className="container-luxe">
@@ -84,20 +98,40 @@ export default function ProductDetail() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
           {/* Gallery */}
           <div>
-            <div className="aspect-[3/4] bg-muted overflow-hidden">
+            <div
+              className="aspect-[3/4] bg-muted overflow-hidden touch-pan-y"
+              onTouchStart={handleGalleryTouchStart}
+              onTouchEnd={handleGalleryTouchEnd}
+            >
               {images[activeImg] && (
-                <Image src={images[activeImg]} alt={product.name} className="w-full h-full" fittingType="fit" loading="eager" />
+                <Image
+                  src={images[activeImg]}
+                  alt={product.name}
+                  className="w-full h-full"
+                  fittingType="fit"
+                  loading="eager"
+                  fetchPriority="high"
+                  sizes="(max-width: 1023px) 100vw, 50vw"
+                />
               )}
             </div>
             {images.length > 1 && (
-              <div className="mt-4 grid grid-cols-5 gap-3">
+              <div className="mt-4 flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory">
                 {images.map((img, i) => (
                   <button
                     key={i}
                     onClick={() => setActiveImg(i)}
-                    className={cn("aspect-[3/4] bg-muted overflow-hidden border", i === activeImg ? "border-foreground" : "border-transparent opacity-60 hover:opacity-100")}
+                    className={cn("aspect-[3/4] w-20 shrink-0 snap-start bg-muted overflow-hidden border", i === activeImg ? "border-foreground" : "border-transparent opacity-60 hover:opacity-100")}
                   >
-                    <Image src={img} alt={`${product.name} ${i + 1}`} className="w-full h-full" fittingType="fit" />
+                    <Image
+                      src={img}
+                      alt={`${product.name} ${i + 1}`}
+                      className="w-full h-full"
+                      fittingType="fit"
+                      loading="lazy"
+                      fetchPriority="low"
+                      sizes="80px"
+                    />
                   </button>
                 ))}
               </div>

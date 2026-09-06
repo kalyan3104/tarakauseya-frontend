@@ -6,6 +6,16 @@ import { Eye, X } from "lucide-react";
 
 const STATUSES = ["requested", "confirmed", "shipped", "delivered", "completed", "cancelled"];
 
+const formatRequestDate = (value) => {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+};
+
 export default function AdminTrialRequests() {
   const qc = useQueryClient();
   const [selected, setSelected] = useState(null);
@@ -42,6 +52,7 @@ export default function AdminTrialRequests() {
                 <th className="px-4 py-3 text-[10px] uppercase tracking-luxe-sm">Area</th>
                 <th className="px-4 py-3 text-[10px] uppercase tracking-luxe-sm">Slot</th>
                 <th className="px-4 py-3 text-[10px] uppercase tracking-luxe-sm">Pieces</th>
+                <th className="px-4 py-3 text-[10px] uppercase tracking-luxe-sm">Requested</th>
                 <th className="px-4 py-3 text-[10px] uppercase tracking-luxe-sm">Status</th>
                 <th className="px-4 py-3"></th>
               </tr>
@@ -54,6 +65,7 @@ export default function AdminTrialRequests() {
                   <td className="px-4 py-3 text-muted-foreground">{r.service_area || r.pincode}</td>
                   <td className="px-4 py-3 text-muted-foreground">{r.preferred_slot || "—"}</td>
                   <td className="px-4 py-3">{r.item_count}</td>
+                  <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatRequestDate(r.created_date)}</td>
                   <td className="px-4 py-3">
                     <select
                       value={r.status}
@@ -86,6 +98,7 @@ export default function AdminTrialRequests() {
             </div>
             <div className="p-6 space-y-3 text-sm">
               <Detail label="Reference">{selected.id}</Detail>
+              <Detail label="Requested">{formatRequestDate(selected.created_date)}</Detail>
               <Detail label="Customer">{selected.customer_name}</Detail>
               <Detail label="Phone">{selected.phone}</Detail>
               {selected.email && <Detail label="Email">{selected.email}</Detail>}

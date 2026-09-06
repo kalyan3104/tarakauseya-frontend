@@ -17,6 +17,11 @@ const SORTS = [
 
 const FABRICS = ["Silk", "Cotton", "Organza", "Handloom", "Tussar"];
 const OCCASIONS = ["Bridal", "Wedding", "Festive", "Everyday"];
+const positionRank = (position) => {
+  if (position === "top") return 0;
+  if (position === "low") return 2;
+  return 1;
+};
 const isHandcraftProduct = (product) => product.collection?.toLowerCase().includes("handcraft");
 const collectionNameFromSlug = (slug) =>
   slug.replace(/-/g, " ").replace(/\b\w/g, (character) => character.toUpperCase());
@@ -41,7 +46,7 @@ export default function Sarees() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["sarees", query, sort],
-    queryFn: () => base44.entities.Product.filter(query, sort, 60),
+    queryFn: () => base44.entities.Product.filter(query, sort, 100),
   });
 
   const products = useMemo(() => {
@@ -55,8 +60,15 @@ export default function Sarees() {
             .some((field) => field?.toLowerCase().includes(s))
       );
     }
+    if (sort === "-created_date") {
+      list = [...list].sort((a, b) => {
+        const positionDifference = positionRank(a.homepage_position) - positionRank(b.homepage_position);
+        if (positionDifference !== 0) return positionDifference;
+        return String(b.created_date || "").localeCompare(String(a.created_date || ""));
+      });
+    }
     return list;
-  }, [collection, data, search]);
+  }, [collection, data, search, sort]);
 
   const setParam = (key, value) => {
     const next = new URLSearchParams(params);

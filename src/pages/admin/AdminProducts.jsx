@@ -9,7 +9,7 @@ export default function AdminProducts() {
   const qc = useQueryClient()
   const { data: products, isLoading } = useQuery({
     queryKey: ['admin-products'],
-    queryFn: () => base44.entities.Product.filter({}).then((r) => r.slice(0, 20)),
+    queryFn: () => base44.entities.Product.filter({}, '-created_date', 100),
   })
   const [editing, setEditing] = useState(null)
   const [showForm, setShowForm] = useState(false)
@@ -58,7 +58,7 @@ export default function AdminProducts() {
           <div className="mb-6 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
             <ShoppingBag className="h-5 w-5" />
-            <span>Admin product overview</span>
+            <span>Admin product overview ({products?.length || 0})</span>
           </div>
           <button onClick={openNew} className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
             <Plus className="h-4 w-4" />
@@ -76,9 +76,22 @@ export default function AdminProducts() {
               products.map((product) => (
                 <div key={product.id} className="rounded-2xl border border-border bg-background p-4">
                   <div className="flex items-center justify-between gap-4">
-                    <div onClick={() => openEdit(product)} className="cursor-pointer">
-                      <p className="text-base font-semibold">{product.name || 'Untitled product'}</p>
-                      <p className="text-sm text-muted-foreground">{product.slug || 'No slug'}</p>
+                    <div onClick={() => openEdit(product)} className="flex min-w-0 cursor-pointer items-center gap-4">
+                      <div className="h-16 w-12 shrink-0 overflow-hidden bg-muted">
+                        {product.cover_image || product.images?.[0] ? (
+                          <img
+                            src={product.cover_image || product.images[0]}
+                            alt=""
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full items-center justify-center text-[9px] uppercase text-muted-foreground">No image</div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-base font-semibold">{product.name || 'Untitled product'}</p>
+                        <p className="truncate text-sm text-muted-foreground">{product.slug || 'No slug'}</p>
+                      </div>
                     </div>
                     <div className="flex items-center gap-4 text-sm">
                       <button

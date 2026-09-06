@@ -51,13 +51,14 @@ export default function Login() {
       });
       const buttonContainer = document.getElementById("google-one-tap-button");
       if (buttonContainer) {
+        const buttonWidth = Math.min(368, Math.max(200, buttonContainer.clientWidth));
         window.google.accounts.id.renderButton(buttonContainer, {
           type: "standard",
           theme: "outline",
           size: "large",
           text: "continue_with",
           shape: "rectangular",
-          width: 368,
+          width: buttonWidth,
         });
       }
       window.google.accounts.id.prompt();
@@ -97,7 +98,10 @@ export default function Login() {
           {error}
         </div>
       )}
-      <div id="google-one-tap-button" className="mb-6 flex justify-center" />
+      <div
+        id="google-one-tap-button"
+        className="mb-6 flex min-h-12 w-full items-center justify-center overflow-hidden"
+      />
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>

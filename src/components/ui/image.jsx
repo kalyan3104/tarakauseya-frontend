@@ -38,7 +38,7 @@ function parseWixMediaUrl(src) {
   }
 }
 
-function optimizeSupabaseImageUrl(src) {
+function buildSupabaseImageUrl(src, width) {
   try {
     const url = new URL(src)
     if (
@@ -52,14 +52,24 @@ function optimizeSupabaseImageUrl(src) {
       "/storage/v1/object/public/",
       "/storage/v1/render/image/public/"
     )
-    url.searchParams.set("width", "900")
-    url.searchParams.set("quality", "75")
+    url.searchParams.set("width", String(width))
+    url.searchParams.set("quality", "72")
     url.searchParams.set("resize", "contain")
     url.searchParams.set("format", "webp")
     return url.toString()
   } catch {
     return src
   }
+}
+
+function optimizeSupabaseImageUrl(src) {
+  return buildSupabaseImageUrl(src, 640)
+}
+
+function buildSupabaseSrcSet(src) {
+  return [320, 640, 960]
+    .map((width) => `${buildSupabaseImageUrl(src, width)} ${width}w`)
+    .join(", ")
 }
 
 const clampDim = (n) => Math.min(Math.max(Math.round(n), 1), MAX_DIMENSION)
@@ -233,6 +243,7 @@ const Image = React.forwardRef(
     // The fallback renders as a plain <img> so a broken upload can't cascade
     // into a second (transformed) failing request.
     const optimizedSrc = optimizeSupabaseImageUrl(imgSrc)
+    const isSupabaseImage = optimizedSrc !== imgSrc
     const parsed = imgSrc === FALLBACK_IMAGE_URL ? null : parseWixMediaUrl(optimizedSrc)
 
     if (!parsed) {
@@ -242,6 +253,7 @@ const Image = React.forwardRef(
           ref={ref}
           src={optimizedSrc}
           {...imageProps}
+          srcSet={isSupabaseImage ? buildSupabaseSrcSet(imgSrc) : imageProps.srcSet}
           className={cn(
             imageProps.className,
             fittingType === "fit" ? "object-contain" : "object-cover"

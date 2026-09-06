@@ -15,7 +15,9 @@ export default function ProductCard({ product, index = 0 }) {
           alt={product.name}
           className="w-full h-full"
           fittingType="fill"
-          loading={index < 4 ? "eager" : "lazy"}
+          loading={index < 2 ? "eager" : "lazy"}
+          fetchPriority={index < 2 ? "high" : "auto"}
+          sizes="(max-width: 1023px) 50vw, 30vw"
         />
         {product.out_of_stock && (
           <span className="absolute top-4 right-4 text-[10px] uppercase tracking-luxe-sm bg-background/95 text-red-700 px-3 py-1.5">

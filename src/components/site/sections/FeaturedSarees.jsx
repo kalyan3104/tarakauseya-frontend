@@ -16,13 +16,25 @@ function ProductCardSkeleton() {
   );
 }
 
+const positionRank = (position) => {
+  if (position === "top") return 0;
+  if (position === "low") return 2;
+  return 1;
+};
+
 export default function FeaturedSarees() {
   const { data, isLoading } = useQuery({
     queryKey: ["featured-sarees"],
-    queryFn: () => base44.entities.Product.filter({ featured: true, active: true }, "-created_date", 8),
+    queryFn: () => base44.entities.Product.filter({ featured: true, active: true }, "-created_date", 100),
   });
 
-  const products = data || [];
+  const products = [...(data || [])]
+    .sort((a, b) => {
+      const positionDifference = positionRank(a.homepage_position) - positionRank(b.homepage_position);
+      if (positionDifference !== 0) return positionDifference;
+      return String(b.created_date || "").localeCompare(String(a.created_date || ""));
+    })
+    .slice(0, 4);
 
   return (
     <section className="py-24 md:py-36 bg-secondary/40">
@@ -45,7 +57,7 @@ export default function FeaturedSarees() {
         <div className="mt-14 md:mt-20 grid grid-cols-2 lg:grid-cols-4 gap-x-4 md:gap-x-6 gap-y-12">
           {isLoading
             ? Array.from({ length: 4 }).map((_, i) => <ProductCardSkeleton key={i} />)
-            : products.slice(0, 4).map((p, i) => (
+            : products.map((p, i) => (
                 <Reveal key={p.id} delay={(i % 4) * 0.08}>
                   <ProductCard product={p} index={i} />
                 </Reveal>

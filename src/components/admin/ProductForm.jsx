@@ -27,6 +27,12 @@ const FIELDS = [
   { key: "seo_description", label: "SEO Description", type: "text" },
 ];
 
+const HOMEPAGE_POSITIONS = [
+  { value: "top", label: "Top" },
+  { value: "middle", label: "Middle" },
+  { value: "low", label: "Low" },
+];
+
 const TOGGLES = [
   { key: "blouse_included", label: "Blouse Included" },
   { key: "featured", label: "Featured" },
@@ -47,6 +53,7 @@ export default function ProductForm({ product, onClose }) {
     blouse_included: false, weight: "", featured: false, trending: false,
     new_arrival: true, active: true, seo_title: "", seo_description: "",
     out_of_stock: false,
+    homepage_position: "middle",
     images: [], cover_image: "",
     ...product,
   }));
@@ -200,6 +207,21 @@ export default function ProductForm({ product, onClose }) {
                 </button>
               ))}
             </div>
+          </div>
+
+          <div>
+            <label htmlFor="homepage-position" className="text-[10px] uppercase tracking-luxe-sm text-muted-foreground">Homepage placement</label>
+            <select
+              id="homepage-position"
+              value={form.homepage_position || "middle"}
+              onChange={(e) => set("homepage_position", e.target.value)}
+              className="vk-admin-input"
+            >
+              {HOMEPAGE_POSITIONS.map((position) => (
+                <option key={position.value} value={position.value}>{position.label}</option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-muted-foreground">Used to order featured products on the homepage.</p>
           </div>
 
           <div className="flex gap-3 pt-4 border-t border-border">

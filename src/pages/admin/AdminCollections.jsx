@@ -65,7 +65,8 @@ export default function AdminCollections() {
 function CollectionForm({ item, onClose }) {
   const qc = useQueryClient();
   const [form, setForm] = useState({
-    name: "", slug: "", description: "", cover_image: "", display_order: 0, active: true, ...item,
+    name: "", slug: "", description: "", cover_image: "", display_order: 0,
+    homepage_position: "middle", active: true, ...item,
   });
   const [saving, setSaving] = useState(false);
 
@@ -94,6 +95,13 @@ function CollectionForm({ item, onClose }) {
           <Field label="Description"><textarea rows={3} value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })} className="vk-admin-input resize-none" /></Field>
           <Field label="Cover Image URL"><input value={form.cover_image || ""} onChange={(e) => setForm({ ...form, cover_image: e.target.value })} className="vk-admin-input" /></Field>
           <Field label="Display Order"><input type="number" value={form.display_order || 0} onChange={(e) => setForm({ ...form, display_order: e.target.value })} className="vk-admin-input" /></Field>
+          <Field label="Homepage Placement">
+            <select value={form.homepage_position || "middle"} onChange={(e) => setForm({ ...form, homepage_position: e.target.value })} className="vk-admin-input">
+              <option value="top">Top</option>
+              <option value="middle">Middle</option>
+              <option value="low">Low</option>
+            </select>
+          </Field>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} /> Active</label>
           <div className="flex gap-3 pt-4 border-t border-border">
             <button type="submit" disabled={saving} className="flex-1 bg-foreground text-background text-[11px] uppercase tracking-luxe-sm py-3 flex items-center justify-center gap-2">

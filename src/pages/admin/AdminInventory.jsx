@@ -102,9 +102,21 @@ export default function AdminInventory() {
             {list.map((item) => {
               const status = stockStatus(item);
               const e = edits[item.id] || {};
+              const product = productMap[item.product_id];
               return (
                 <tr key={item.id} className="border-b border-border/60 hover:bg-secondary/40">
-                  <td className="p-4">{productMap[item.product_id]?.name || "—"}</td>
+                  <td className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-14 w-10 shrink-0 overflow-hidden bg-muted">
+                        {product?.cover_image || product?.images?.[0] ? (
+                          <img src={product.cover_image || product.images[0]} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="flex h-full items-center justify-center text-[8px] uppercase text-muted-foreground">No image</div>
+                        )}
+                      </div>
+                      <span>{product?.name || "—"}</span>
+                    </div>
+                  </td>
                   <td className="p-4 text-muted-foreground font-mono text-xs">{item.sku}</td>
                   <td className="p-2"><input type="number" value={e.stock_quantity ?? item.stock_quantity ?? 0} onChange={(ev) => setField(item.id, "stock_quantity", ev.target.value)} className="vk-inv-input" /></td>
                   <td className="p-2"><input type="number" value={e.reserved ?? item.reserved ?? 0} onChange={(ev) => setField(item.id, "reserved", ev.target.value)} className="vk-inv-input" /></td>

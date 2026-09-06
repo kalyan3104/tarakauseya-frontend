@@ -17,13 +17,25 @@ const FALLBACK = [
   { name: "Luxury", slug: "luxury", desc: "The rarest weaves, reserved for the few.", image: MEDIA.craftsmanship },
 ];
 
+const positionRank = (position) => {
+  if (position === "top") return 0;
+  if (position === "low") return 2;
+  return 1;
+};
+
 export default function Collections() {
   const { data } = useQuery({
     queryKey: ["collections-list"],
-    queryFn: () => base44.entities.Collection.filter({ active: true }, "display_order", 50),
+    queryFn: () => base44.entities.Collection.filter({ active: true }, "display_order", 100),
   });
 
-  const items = data && data.length ? data : FALLBACK;
+  const items = data && data.length
+    ? [...data].sort((a, b) => {
+        const positionDifference = positionRank(a.homepage_position) - positionRank(b.homepage_position);
+        if (positionDifference !== 0) return positionDifference;
+        return Number(a.display_order || 0) - Number(b.display_order || 0);
+      })
+    : FALLBACK;
 
   return (
     <>
