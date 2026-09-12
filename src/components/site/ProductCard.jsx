@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
+import { Star } from "lucide-react";
 import { Image } from "@/components/ui/image";
 
-export default function ProductCard({ product, index = 0 }) {
+export default function ProductCard({ product, index = 0, rating }) {
   const price = product.discount_price && product.discount_price < product.price
     ? product.discount_price
     : product.price;
@@ -19,6 +20,16 @@ export default function ProductCard({ product, index = 0 }) {
           fetchPriority={index < 2 ? "high" : "auto"}
           sizes="(max-width: 1023px) 50vw, 30vw"
         />
+        {rating?.count > 0 && (
+          <span
+            className="absolute bottom-1.5 left-1.5 inline-flex items-center gap-1 bg-background/95 px-1.5 py-1 text-[9px] tracking-[0.08em]"
+            aria-label={`${rating.average.toFixed(1)} out of 5 stars from ${rating.count} review${rating.count === 1 ? "" : "s"}`}
+          >
+            <Star className="h-2.5 w-2.5 fill-amber-600 text-amber-600" aria-hidden="true" />
+            <span>{rating.average.toFixed(1)}</span>
+            <span className="text-muted-foreground">({rating.count})</span>
+          </span>
+        )}
         {product.out_of_stock && (
           <span className={`absolute right-1.5 text-[7px] uppercase tracking-[0.12em] bg-background/95 text-red-700 px-1 py-0.5 ${product.trending ? "top-7" : "top-1.5"}`}>
             Out of stock

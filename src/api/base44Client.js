@@ -102,8 +102,10 @@ const integrations = {
       }
       const formData = new FormData();
       formData.append('file', file);
+      const token = localStorage.getItem(TOKEN_KEY);
       const response = await fetch(`${API_BASE}/integrations/core/upload-file`, {
         method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: formData,
       });
       if (!response.ok) {
@@ -252,6 +254,7 @@ export const base44 = {
     Order: buildEntityClient('orders'),
     ServiceArea: buildEntityClient('service-areas'),
     InventoryLog: buildEntityClient('inventory-logs'),
+    Review: buildEntityClient('reviews'),
   },
   integrations,
   auth,

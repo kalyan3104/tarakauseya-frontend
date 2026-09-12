@@ -49,6 +49,20 @@ export default function Sarees() {
     queryFn: () => base44.entities.Product.filter(query, sort, 100),
   });
 
+  const { data: reviews = [] } = useQuery({
+    queryKey: ["saree-ratings"],
+    queryFn: () => base44.entities.Review.filter({}, "-created_date", 1000),
+  });
+
+  const ratings = useMemo(() => reviews.reduce((summary, review) => {
+    if (!review.product_id || !review.rating) return summary;
+    const current = summary[review.product_id] || { total: 0, count: 0 };
+    current.total += Number(review.rating);
+    current.count += 1;
+    summary[review.product_id] = current;
+    return summary;
+  }, {}), [reviews]);
+
   const products = useMemo(() => {
     let list = data || [];
     if (!collection) list = list.filter((product) => !isHandcraftProduct(product));
@@ -187,7 +201,14 @@ export default function Sarees() {
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 md:gap-x-6 gap-y-12">
                   {products.map((p, i) => (
                     <Reveal key={p.id} delay={(i % 3) * 0.06}>
-                      <ProductCard product={p} index={i} />
+                      <ProductCard
+                        product={p}
+                        index={i}
+                        rating={ratings[p.id] && {
+                          average: ratings[p.id].total / ratings[p.id].count,
+                          count: ratings[p.id].count,
+                        }}
+                      />
                     </Reveal>
                   ))}
                 </div>

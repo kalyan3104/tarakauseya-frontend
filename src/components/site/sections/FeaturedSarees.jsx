@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import Reveal from "@/components/site/Reveal";
@@ -27,6 +28,20 @@ export default function FeaturedSarees() {
     queryKey: ["featured-sarees"],
     queryFn: () => base44.entities.Product.filter({ featured: true, active: true }, "-created_date", 100),
   });
+
+  const { data: reviews = [] } = useQuery({
+    queryKey: ["featured-saree-ratings"],
+    queryFn: () => base44.entities.Review.filter({}, "-created_date", 1000),
+  });
+
+  const ratings = useMemo(() => reviews.reduce((summary, review) => {
+    if (!review.product_id || !review.rating) return summary;
+    const current = summary[review.product_id] || { total: 0, count: 0 };
+    current.total += Number(review.rating);
+    current.count += 1;
+    summary[review.product_id] = current;
+    return summary;
+  }, {}), [reviews]);
 
   const products = [...(data || [])]
     .sort((a, b) => {
@@ -59,7 +74,14 @@ export default function FeaturedSarees() {
             ? Array.from({ length: 4 }).map((_, i) => <ProductCardSkeleton key={i} />)
             : products.map((p, i) => (
                 <Reveal key={p.id} delay={(i % 4) * 0.08}>
-                  <ProductCard product={p} index={i} />
+                  <ProductCard
+                    product={p}
+                    index={i}
+                    rating={ratings[p.id] && {
+                      average: ratings[p.id].total / ratings[p.id].count,
+                      count: ratings[p.id].count,
+                    }}
+                  />
                 </Reveal>
               ))}
         </div>

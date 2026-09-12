@@ -1,23 +1,39 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
 import { formatINR } from "@/lib/format";
 import Reveal from "@/components/site/Reveal";
 import ProductCard from "@/components/site/ProductCard";
-import { ArrowLeft, ChevronLeft, ChevronRight, Plus, Minus, ShoppingBag, Check } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Plus, Minus, ShoppingBag, Check, Star, ImagePlus, X, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MAX_ITEM_QUANTITY, useCart } from "@/lib/CartContext";
+import { useAuth } from "@/lib/AuthContext";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 export default function ProductDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const [activeImg, setActiveImg] = useState(0);
+  const [productImage, setProductImage] = useState(null);
+  const [productZoom, setProductZoom] = useState(1);
+  const [productOffset, setProductOffset] = useState({ x: 0, y: 0 });
+  const productDrag = useRef(null);
+  const productPointers = useRef(new Map());
+  const pinchStart = useRef(null);
   const [openSpec, setOpenSpec] = useState(null);
   const [touchStart, setTouchStart] = useState(null);
   const { items, addItem, updateQuantity } = useCart();
+  const { isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
   const [added, setAdded] = useState(false);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewBody, setReviewBody] = useState("");
+  const [reviewPhotos, setReviewPhotos] = useState([]);
+  const [reviewPhoto, setReviewPhoto] = useState(null);
+  const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
+  const [reviewStatus, setReviewStatus] = useState("");
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", slug],
@@ -28,6 +44,29 @@ export default function ProductDetail() {
     queryKey: ["related", product?.collection],
     queryFn: () => base44.entities.Product.filter({ active: true, collection: product.collection }, "-created_date", 5),
     enabled: !!product?.collection,
+  });
+
+  const { data: reviews = [] } = useQuery({
+    queryKey: ["reviews", product?.id],
+    queryFn: () => base44.entities.Review.filter({ product_id: product.id }, "-created_date", 100),
+    enabled: !!product?.id,
+  });
+
+  const reviewMutation = useMutation({
+    mutationFn: () => base44.entities.Review.create({
+      product_id: product.id,
+      rating: reviewRating,
+      body: reviewBody.trim(),
+      photos: reviewPhotos.map((photo) => photo.url),
+    }),
+    onSuccess: () => {
+      setReviewRating(0);
+      setReviewBody("");
+      setReviewPhotos([]);
+      setReviewStatus("Thank you for sharing your experience.");
+      queryClient.invalidateQueries({ queryKey: ["reviews", product.id] });
+    },
+    onError: (error) => setReviewStatus(error.message || "We could not submit your review."),
   });
 
   if (isLoading) {
@@ -76,6 +115,46 @@ export default function ProductDetail() {
   ];
 
   const enquirySubject = encodeURIComponent(`Enquiry: ${product.name}`);
+  const averageRating = reviews.length
+    ? reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / reviews.length
+    : 0;
+
+  const submitReview = (event) => {
+    event.preventDefault();
+    if (!reviewRating || !reviewBody.trim()) {
+      setReviewStatus("Choose a rating and write a short review.");
+      return;
+    }
+    setReviewStatus("");
+    reviewMutation.mutate();
+  };
+
+  const handleReviewPhotos = async (event) => {
+    const files = Array.from(event.target.files || []);
+    event.target.value = "";
+    if (!files.length) return;
+    if (reviewPhotos.length + files.length > 4) {
+      setReviewStatus("You can add up to 4 photos.");
+      return;
+    }
+    if (files.some((file) => !["image/jpeg", "image/png", "image/webp"].includes(file.type))) {
+      setReviewStatus("Photos must be JPG, PNG, or WebP images.");
+      return;
+    }
+    setIsUploadingPhotos(true);
+    setReviewStatus("");
+    try {
+      const uploaded = await Promise.all(files.map(async (file) => {
+        const result = await base44.integrations.Core.UploadFile({ file });
+        return { url: result.file_url, name: file.name };
+      }));
+      setReviewPhotos((current) => [...current, ...uploaded]);
+    } catch (error) {
+      setReviewStatus(error.message || "We could not upload that photo.");
+    } finally {
+      setIsUploadingPhotos(false);
+    }
+  };
 
   const handleGalleryTouchStart = (event) => {
     setTouchStart(event.touches[0].clientX);
@@ -88,6 +167,75 @@ export default function ProductDetail() {
       setActiveImg((current) => (distance < 0 ? (current + 1) % images.length : (current - 1 + images.length) % images.length));
     }
     setTouchStart(null);
+  };
+
+  const openProductImage = (index) => {
+    setProductImage({ src: images[index], index });
+    setProductZoom(1);
+    setProductOffset({ x: 0, y: 0 });
+  };
+
+  const handleProductPointerDown = (event) => {
+    event.currentTarget.setPointerCapture(event.pointerId);
+    productPointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (productPointers.current.size === 2) {
+      const [first, second] = [...productPointers.current.values()];
+      pinchStart.current = {
+        distance: Math.hypot(second.x - first.x, second.y - first.y),
+        zoom: productZoom,
+      };
+      productDrag.current = null;
+      return;
+    }
+    if (productZoom === 1) return;
+    productDrag.current = {
+      pointerX: event.clientX,
+      pointerY: event.clientY,
+      offset: productOffset,
+    };
+  };
+
+  const handleProductPointerMove = (event) => {
+    if (productPointers.current.has(event.pointerId)) {
+      productPointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    }
+    if (pinchStart.current && productPointers.current.size === 2) {
+      const [first, second] = [...productPointers.current.values()];
+      const distance = Math.hypot(second.x - first.x, second.y - first.y);
+      setProductZoom(Math.min(2.5, Math.max(1, pinchStart.current.zoom * (distance / pinchStart.current.distance))));
+      return;
+    }
+    if (!productDrag.current) return;
+    setProductOffset({
+      x: productDrag.current.offset.x + event.clientX - productDrag.current.pointerX,
+      y: productDrag.current.offset.y + event.clientY - productDrag.current.pointerY,
+    });
+  };
+
+  const handleProductWheel = (event) => {
+    event.preventDefault();
+    setProductZoom((zoom) => {
+      const nextZoom = Math.min(2.5, Math.max(1, zoom - event.deltaY * 0.002));
+      if (nextZoom === 1) setProductOffset({ x: 0, y: 0 });
+      return nextZoom;
+    });
+  };
+
+  const handleProductDoubleClick = () => {
+    setProductZoom((zoom) => {
+      const nextZoom = zoom === 1 ? 1.75 : 1;
+      if (nextZoom === 1) setProductOffset({ x: 0, y: 0 });
+      return nextZoom;
+    });
+  };
+
+  const stopProductDrag = (event) => {
+    productPointers.current.delete(event.pointerId);
+    if (productPointers.current.size < 2) pinchStart.current = null;
+    if (productDrag.current) {
+      event.currentTarget.releasePointerCapture?.(event.pointerId);
+      productDrag.current = null;
+    }
   };
 
   return (
@@ -106,15 +254,22 @@ export default function ProductDetail() {
               onTouchEnd={handleGalleryTouchEnd}
             >
               {images[activeImg] && (
-                <Image
-                  src={images[activeImg]}
-                  alt={product.name}
-                  className="w-full h-full"
-                  fittingType="fit"
-                  loading="eager"
-                  fetchPriority="high"
-                  sizes="(max-width: 1023px) 100vw, 50vw"
-                />
+                <button
+                  type="button"
+                  onClick={() => openProductImage(activeImg)}
+                  className="block h-full w-full cursor-zoom-in focus:outline-none focus:ring-2 focus:ring-inset focus:ring-foreground"
+                  aria-label={`Open ${product.name} image ${activeImg + 1}`}
+                >
+                  <Image
+                    src={images[activeImg]}
+                    alt={product.name}
+                    className="w-full h-full"
+                    fittingType="fit"
+                    loading="eager"
+                    fetchPriority="high"
+                    sizes="(max-width: 1023px) 100vw, 50vw"
+                  />
+                </button>
               )}
             </div>
             {images.length > 1 && (
@@ -248,6 +403,220 @@ export default function ProductDetail() {
           </div>
         </div>
 
+        <section className="mt-24 md:mt-32 pt-12 border-t border-border" aria-labelledby="reviews-heading">
+          <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr]">
+            <div>
+              <p className="text-[11px] uppercase tracking-luxe-sm text-muted-foreground">From the community</p>
+              <h2 id="reviews-heading" className="font-display text-3xl md:text-4xl mt-3">Reviews</h2>
+              <div className="mt-5 flex items-center gap-3">
+                <span className="font-display text-3xl">{averageRating ? averageRating.toFixed(1) : "—"}</span>
+                <div>
+                  <StarRating value={Math.round(averageRating)} />
+                  <p className="text-xs text-muted-foreground mt-1">{reviews.length} {reviews.length === 1 ? "review" : "reviews"}</p>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              {reviews.length > 0 ? (
+                <div className="space-y-7">
+                  {reviews.map((review) => (
+                    <article key={review.id} className="border-b border-border pb-7 last:border-0">
+                      <div className="flex items-center justify-between gap-4">
+                        <StarRating value={review.rating} />
+                        <time className="text-[10px] uppercase tracking-luxe-sm text-muted-foreground">
+                          {review.created_date ? new Date(review.created_date).toLocaleDateString("en-IN", { month: "short", year: "numeric" }) : ""}
+                        </time>
+                      </div>
+                      <p className="mt-3 text-sm font-light leading-relaxed">{review.body}</p>
+                      {review.photos?.length > 0 && (
+                        <div className="mt-4 flex gap-2 overflow-x-auto">
+                          {review.photos.map((photo, index) => (
+                            <button
+                              key={photo}
+                              type="button"
+                              onClick={() => setReviewPhoto({ src: photo, index })}
+                              className="h-20 w-20 shrink-0 overflow-hidden focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                              aria-label={`Open customer review photo ${index + 1}`}
+                            >
+                              <img src={photo} alt="Customer review" className="h-full w-full object-cover transition-transform hover:scale-105" loading="lazy" />
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      <p className="mt-3 text-[10px] uppercase tracking-luxe-sm text-muted-foreground">{review.author_name}</p>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground font-light">Be the first to share your experience with this piece.</p>
+              )}
+
+              <div className="mt-10 border-t border-border pt-8">
+                {isAuthenticated ? (
+                  <form onSubmit={submitReview} className="space-y-4">
+                    <p className="text-[11px] uppercase tracking-luxe-sm">Share your experience</p>
+                    <div className="flex gap-1" aria-label="Choose a rating">
+                      {[1, 2, 3, 4, 5].map((rating) => (
+                        <button key={rating} type="button" onClick={() => setReviewRating(rating)} aria-label={`${rating} star${rating === 1 ? "" : "s"}`} className="p-1">
+                          <Star className={cn("h-5 w-5", rating <= reviewRating ? "fill-foreground text-foreground" : "text-muted-foreground")} />
+                        </button>
+                      ))}
+                    </div>
+                    <textarea
+                      value={reviewBody}
+                      onChange={(event) => setReviewBody(event.target.value)}
+                      maxLength={2000}
+                      rows={4}
+                      placeholder="What stood out to you?"
+                      className="w-full resize-none border border-border bg-transparent px-4 py-3 text-sm outline-none focus:border-foreground"
+                    />
+                    <div>
+                      <div className="flex items-center justify-between gap-4">
+                        <label className="inline-flex cursor-pointer items-center gap-2 text-[11px] uppercase tracking-luxe-sm editorial-link">
+                          <ImagePlus className="h-4 w-4" />
+                          {isUploadingPhotos ? "Uploading..." : "Add photos"}
+                          <input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={handleReviewPhotos} disabled={isUploadingPhotos || reviewPhotos.length >= 4} className="sr-only" />
+                        </label>
+                        <span className="text-xs text-muted-foreground">{reviewPhotos.length}/4</span>
+                      </div>
+                      {reviewPhotos.length > 0 && (
+                        <div className="mt-3 flex gap-3 overflow-x-auto">
+                          {reviewPhotos.map((photo) => (
+                            <div key={photo.url} className="relative h-20 w-20 shrink-0">
+                              <img src={photo.url} alt={photo.name} className="h-full w-full object-cover" />
+                              <button type="button" onClick={() => setReviewPhotos((current) => current.filter((item) => item.url !== photo.url))} aria-label={`Remove ${photo.name}`} className="absolute right-1 top-1 bg-background/90 p-1">
+                                <X className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <button type="submit" disabled={reviewMutation.isPending || isUploadingPhotos} className="bg-foreground px-6 py-3 text-[11px] uppercase tracking-luxe-sm text-background disabled:opacity-50">
+                      {reviewMutation.isPending ? "Submitting..." : "Submit review"}
+                    </button>
+                    {reviewStatus && <p className="text-xs text-muted-foreground">{reviewStatus}</p>}
+                  </form>
+                ) : (
+                  <p className="text-sm text-muted-foreground font-light"> <Link to="/login" className="editorial-link text-foreground">Sign in</Link> to leave a review.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <Dialog open={!!reviewPhoto} onOpenChange={(open) => !open && setReviewPhoto(null)}>
+          <DialogContent className="max-w-5xl border-0 bg-background/95 p-2 sm:p-3">
+            <DialogTitle className="sr-only">Customer review photo {reviewPhoto?.index ? reviewPhoto.index + 1 : ""}</DialogTitle>
+            {reviewPhoto && (
+              <img
+                src={reviewPhoto.src}
+                alt={`Customer review photo ${reviewPhoto.index + 1}`}
+                className="max-h-[85vh] w-full object-contain"
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
+          open={!!productImage}
+          onOpenChange={(open) => {
+            if (!open) setProductImage(null);
+          }}
+        >
+          <DialogContent className="h-[100dvh] w-screen max-w-none border-0 bg-black/95 p-0 text-white sm:rounded-none">
+            <DialogTitle className="sr-only">View {product.name} image {productImage ? productImage.index + 1 : ""}</DialogTitle>
+            {productImage && (
+              <div className="relative flex h-full min-h-0 flex-col items-center justify-center gap-4 overflow-hidden px-4 pb-5 pt-12 sm:px-8">
+                <img
+                  src={productImage.src}
+                  alt={`${product.name} image ${productImage.index + 1}`}
+                  className={cn(
+                    "h-[calc(100dvh-9rem)] w-[min(92vw,900px)] shrink-0 select-none object-contain touch-none",
+                    productZoom === 1 ? "cursor-zoom-in" : "cursor-grab active:cursor-grabbing"
+                  )}
+                  style={{
+                    transform: `translate(${productOffset.x}px, ${productOffset.y}px) scale(${productZoom})`,
+                    transition: productDrag.current ? "none" : "transform 200ms",
+                  }}
+                  onPointerDown={handleProductPointerDown}
+                  onPointerMove={handleProductPointerMove}
+                  onPointerUp={stopProductDrag}
+                  onPointerCancel={stopProductDrag}
+                  onWheel={handleProductWheel}
+                  onDoubleClick={handleProductDoubleClick}
+                />
+                {images.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const index = (productImage.index - 1 + images.length) % images.length;
+                        setProductImage({ src: images[index], index });
+                        setProductZoom(1);
+                        setProductOffset({ x: 0, y: 0 });
+                      }}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+                      aria-label="Previous product image"
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const index = (productImage.index + 1) % images.length;
+                        setProductImage({ src: images[index], index });
+                        setProductZoom(1);
+                        setProductOffset({ x: 0, y: 0 });
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+                      aria-label="Next product image"
+                    >
+                      <ChevronRight className="h-5 w-5" />
+                    </button>
+                  </>
+                )}
+                <div className="absolute bottom-5 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-full border border-white/20 bg-black/50 p-1 backdrop-blur-sm">
+                  <button
+                    type="button"
+                    onClick={() => setProductZoom((zoom) => {
+                      const nextZoom = Math.max(1, zoom - 0.25);
+                      if (nextZoom === 1) setProductOffset({ x: 0, y: 0 });
+                      return nextZoom;
+                    })}
+                    className="rounded-full p-2.5 transition-colors hover:bg-white/15 disabled:opacity-30"
+                    disabled={productZoom === 1}
+                    aria-label="Zoom out"
+                  >
+                    <ZoomOut className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setProductZoom(1);
+                      setProductOffset({ x: 0, y: 0 });
+                    }}
+                    className="rounded-full p-2.5 transition-colors hover:bg-white/15"
+                    aria-label="Reset zoom"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setProductZoom((zoom) => Math.min(2.5, zoom + 0.25))}
+                    className="rounded-full p-2.5 transition-colors hover:bg-white/15 disabled:opacity-30"
+                    disabled={productZoom === 2.5}
+                    aria-label="Zoom in"
+                  >
+                    <ZoomIn className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
         {/* Related */}
         {related && related.filter((p) => p.id !== product.id).length > 0 && (
           <section className="mt-24 md:mt-32 pt-12 border-t border-border">
@@ -260,6 +629,16 @@ export default function ProductDetail() {
           </section>
         )}
       </div>
+    </div>
+  );
+}
+
+function StarRating({ value }) {
+  return (
+    <div className="flex gap-0.5" aria-label={`${value} out of 5 stars`}>
+      {[1, 2, 3, 4, 5].map((rating) => (
+        <Star key={rating} className={cn("h-3.5 w-3.5", rating <= value ? "fill-foreground text-foreground" : "text-muted-foreground")} />
+      ))}
     </div>
   );
 }
