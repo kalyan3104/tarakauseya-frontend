@@ -12,6 +12,30 @@ import { MAX_ITEM_QUANTITY, useCart } from "@/lib/CartContext";
 import { useAuth } from "@/lib/AuthContext";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
+const REVIEW_PHOTO_MAX_BYTES = 8 * 1024 * 1024;
+const REVIEW_PHOTO_MAX_EDGE = 2400;
+
+async function prepareReviewPhoto(file) {
+  if (file.size <= REVIEW_PHOTO_MAX_BYTES) return file;
+
+  const imageUrl = URL.createObjectURL(file);
+  try {
+    const image = new window.Image();
+    image.src = imageUrl;
+    await image.decode();
+    const scale = Math.min(1, REVIEW_PHOTO_MAX_EDGE / Math.max(image.naturalWidth, image.naturalHeight));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+    canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.8));
+    if (!blob) throw new Error("Could not prepare that photo for upload.");
+    return new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" });
+  } finally {
+    URL.revokeObjectURL(imageUrl);
+  }
+}
+
 export default function ProductDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -145,8 +169,9 @@ export default function ProductDetail() {
     setReviewStatus("");
     try {
       const uploaded = await Promise.all(files.map(async (file) => {
-        const result = await base44.integrations.Core.UploadFile({ file });
-        return { url: result.file_url, name: file.name };
+        const preparedFile = await prepareReviewPhoto(file);
+        const result = await base44.integrations.Core.UploadFile({ file: preparedFile });
+        return { url: result.file_url, name: preparedFile.name };
       }));
       setReviewPhotos((current) => [...current, ...uploaded]);
     } catch (error) {
