@@ -109,6 +109,9 @@ const integrations = {
         body: formData,
       });
       if (!response.ok) {
+        if (response.status === 413) {
+          throw new Error('That photo is too large. Please choose a smaller image.');
+        }
         const errorText = await response.text();
         try {
           const body = JSON.parse(errorText);
